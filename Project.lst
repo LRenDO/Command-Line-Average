@@ -1,16 +1,21 @@
-Microsoft (R) Macro Assembler Version 14.27.29111.0	    09/23/20 15:26:21
+Microsoft (R) Macro Assembler Version 14.27.29112.0	    11/25/20 22:15:59
 &Project Template        (template.asm			     Page 1 - 1
 
 
 				TITLE Project Template        (template.asm)
 
 				; Author: Ren Demeis-Ortiz
-				; Last Modified:
+				; Last Modified: 11.3.20
 				; OSU Email: demeisol@oregonstate.edu
 				; Course Number: CS271 Sec 400
-				; Project Number:           
-				; Due Date: 
-				; Description:
+				; Project Number: 6          
+				; Due Date: 12.6.20
+				; Description: Prompts user to enter 10 signed dword integers. 
+				;		validates input and stores all values in an array. Calculates average.
+				;		Finally it prints the integers, sum and average.
+				;		Requires Irvine Library.
+
+				;_____________________ADD DESCRIPTIONS Above and below change starting outputlist variable to 0
 
 
 				INCLUDE Irvine32.inc
@@ -32,26 +37,572 @@ Microsoft (R) Macro Assembler Version 14.27.29111.0	    09/23/20 15:26:21
 			      C .LIST
 			      C 
 
-				; (insert constant definitions here)
- 00000000			.data
+				; ---------------------------------------------------------------------------------
+				; Name: mGetString
+				;
+				; Displays a prompt and receives string input from user.
+				;
+				; Preconditions: Pass string address for prompt and location for user input to be
+				;		stored by reference. Uses ReadString and WriteString from Irvine Library and
+				;		mDisplayString MACRO.
+				;
+				; Postconditions: User input is stored at second parameter. Registers are preserved 
+				;		and restored (EDX, ECX, EAX). 
+				;
+				; Receives: 
+				;		prompt (by reference) = address of prompt
+				;		buffSize = size of buffer for user input
+				;		input (by reference) =Address for storing user entered input 
+				;		charEntered (by reference) = Address for storing total characters entered
+				;
+				; Returns: 
+				;		input = User input
+				;		charEntered = Total Characters Entered by User
+				;		
+				; ---------------------------------------------------------------------------------
+				mGetString MACRO strAddress:REQ, buffSize:REQ, input:REQ, charEntered:REQ
+					; Preserve Registers
+					PUSH	EDX
+					PUSH	ECX
+					PUSH	EAX
 
-				; (insert variable definitions here)
+					; Prompt User 
+					mDisplayString	strAddress
+
+					; Get and Save User input
+					MOV		EDX, input
+					MOV		ECX, buffSize
+					CALL	ReadString
+					MOV		charEntered, EAX
+
+					; Restore Registers
+					POP		EAX
+					POP		ECX
+					POP		EDX
+				ENDM
+
+				; ---------------------------------------------------------------------------------
+				; Name: mDisplayString
+				;
+				; Prints to console string at address passed as parameter
+				;
+				; Preconditions: Pass string reference by parameter. Uses WriteString   
+				;		from Irvine Library.
+				;
+				; Postconditions: Uses EDX but preserves and restores it. Displays string.
+				;
+				; Receives:
+				;		strAddr (by reference) = address of string to be printed
+				;
+				; Returns: None. Displays string.
+				;		
+				; ---------------------------------------------------------------------------------
+				mDisplayString MACRO strAddr:REQ
+					; Preserve Register
+					PUSH	EDX
+
+					; Display String
+					MOV		EDX, strAddr
+					CALL	WriteString
+
+					; Restore Register
+					POP		EDX
+				ENDM
+
+				;_______________min -2147483648   max +2147483647
+				; Constants 
+ = 0000000D			BUFFERSIZE = 13		;max char for a valid SDWORD is 11 + null + 1 for validation
+ = 0000000A			ARRAYLEN = 10		;length of output array
+
+ 00000000			.data
+				; Message and Title Variables
+ 00000000 2E 2E 2E 20 42	intro1			BYTE	"... By Ren Demeis-Ortiz",13,10,13,10,0
+	   79 20 52 65 6E
+	   20 44 65 6D 65
+	   69 73 2D 4F 72
+	   74 69 7A 0D 0A
+	   0D 0A 00
+ 0000001C 46 75 6E 63 74	intro2			BYTE	"Functionality",13,10
+	   69 6F 6E 61 6C
+	   69 74 79 0D 0A
+ 0000002B  2E 2E 2E 0D 0A					BYTE	"...",13,10
+ 00000030  2E 2E 2E 0D 0A					BYTE	"...",13,10
+ 00000035  2E 2E 2E 0D 0A					BYTE	"...",13,10
+ 0000003A  2E 2E 2E 0D 0A					BYTE	"...",13,10
+ 0000003F  2E 2E 2E 0D 0A					BYTE	"...",13,10
+ 00000044  2E 2E 2E 0D 0A					BYTE	"...",13,10
+ 00000049  2E 2E 2E 0D 0A					BYTE	"...",13,10
+ 0000004E  0D 0A 00						BYTE	13,10,0
+ 00000051 45 6E 74 65 72	prompt1			BYTE	"Enter a signed number between -2,147,483,648" 
+	   20 61 20 73 69
+	   67 6E 65 64 20
+	   6E 75 6D 62 65
+	   72 20 62 65 74
+	   77 65 65 6E 20
+	   2D 32 2C 31 34
+	   37 2C 34 38 33
+	   2C 36 34 38
+ 0000007D  61 6E 64 20 2B					BYTE	"and +2,147,483,647: ",13.10,0
+	   32 2C 31 34 37
+	   2C 34 38 33 2C
+	   36 34 37 3A 20
+	   00 00
+ 00000093 59 6F 75 20 45	listTitle		BYTE	"You Entered:",13,10,0
+	   6E 74 65 72 65
+	   64 3A 0D 0A 00
+ 000000A2 53 75 6D 3A 20	sumTitle		BYTE	"Sum: ",0
+	   00
+ 000000A8 41 76 65 72 61	avgTitle		BYTE	"Average (rounded down to nearest integer): ",0
+	   67 65 20 28 72
+	   6F 75 6E 64 65
+	   64 20 64 6F 77
+	   6E 20 74 6F 20
+	   6E 65 61 72 65
+	   73 74 20 69 6E
+	   74 65 67 65 72
+	   29 3A 20 00
+ 000000D4 2E 2E 2E 2C 20	farewell		BYTE	"..., have a great day!",13,10,13,10,0
+	   68 61 76 65 20
+	   61 20 67 72 65
+	   61 74 20 64 61
+	   79 21 0D 0A 0D
+	   0A 00
+
+				; Array and Calculation Variables
+ 000000EF  0000000D [		userInput		BYTE	BUFFERSIZE DUP (0)
+	    00
+	   ]
+ 000000FC 0000000D		userInputSize	DWORD	SIZEOF userInput
+ 00000100  0000000A [		outputList		SDWORD	ARRAYLEN DUP (-2147483648)
+	    80000000
+	   ]
+ 00000128 00000004		typeSize		DWORD	TYPE outputList
+ 0000012C 00000000		inputLen		DWORD	?
+ 00000130 0000000A		elemPerLine		DWORD	10
+ 00000134			sum				SQWORD  0
+	   0000000000000000
+ 0000013C 00000000		average			SDWORD	0
+
  00000000			.code
  00000000			main PROC
+				 
+					; Introduce Program
+ 00000000  68 00000000 R		PUSH	OFFSET intro1
+ 00000005  68 0000001C R		PUSH	OFFSET intro2
+ 0000000A  E8 0000007D			CALL	introduction	
 
-				; (insert executable instructions here)
 
-					exit  ; exit to operating system
- 00000000  6A 00	   *	    push   +000000000h
- 00000002  E8 00000000 E   *	    call   ExitProcess
- 00000007			main ENDP
+					mGetString OFFSET prompt1, userInputSize, OFFSET userInput, inputLen
+ 0000000F  52		     1		PUSH	EDX
+ 00000010  51		     1		PUSH	ECX
+ 00000011  50		     1		PUSH	EAX
+ 00000012  52		     2		PUSH	EDX
+ 00000013  BA 00000051 R     2		MOV		EDX, OFFSET prompt1
+ 00000018  E8 00000000 E     2		CALL	WriteString
+ 0000001D  5A		     2		POP		EDX
+ 0000001E  BA 000000EF R     1		MOV		EDX, OFFSET userInput
+ 00000023  8B 0D 000000FC R  1		MOV		ECX, userInputSize
+ 00000029  E8 00000000 E     1		CALL	ReadString
+ 0000002E  A3 0000012C R     1		MOV		inputLen, EAX
+ 00000033  58		     1		POP		EAX
+ 00000034  59		     1		POP		ECX
+ 00000035  5A		     1		POP		EDX
 
-				; (insert additional procedures here)
+					mDisplayString OFFSET userInput
+ 00000036  52		     1		PUSH	EDX
+ 00000037  BA 000000EF R     1		MOV		EDX, OFFSET userInput
+ 0000003C  E8 00000000 E     1		CALL	WriteString
+ 00000041  5A		     1		POP		EDX
+
+					; Get 10 Valid Integers from User input
+
+					; Get and Convert User Inputted String
+
+					; Display userInput Array
+ 00000042  FF 35 00000130 R		PUSH	elemPerLine
+ 00000048  FF 35 00000128 R		PUSH	typeSize
+ 0000004E  6A 0A			PUSH	ARRAYLEN
+ 00000050  68 00000093 R		PUSH	OFFSET listTitle
+ 00000055  68 00000100 R		PUSH	OFFSET outputList
+ 0000005A  E8 00000048			CALL	displayList
+
+					; Calculate Average and Sum
+ 0000005F  FF 35 00000128 R		PUSH	typeSize
+ 00000065  68 0000013C R		PUSH	OFFSET average
+ 0000006A  68 00000134 R		PUSH	OFFSET sum
+ 0000006F  68 00000100 R		PUSH	OFFSET outputList
+ 00000074  6A 0A			PUSH	ARRAYLEN
+ 00000076  E8 0000007D			CALL	calcAverage
+
+					; Display Sum 
+
+					; Display Average
+
+					; Say farewell
+ 0000007B  68 000000D4 R		PUSH	OFFSET farewell
+ 00000080  E8 000000D0			CALL	displayFarewell
+
+
+
+					Invoke ExitProcess,0	; exit to operating system
+ 00000085  6A 00	   *	    push   +000000000h
+ 00000087  E8 00000000 E   *	    call   ExitProcess
+ 0000008C			main ENDP
+
+				; ---------------------------------------------------------------------------------
+				; Name: introduction
+				;
+				; Displays program name, author and functionality.
+				;
+				; Preconditions: Parameters pushed on to stack in following order - intro1, intro2
+				;			 Requires printString MACRO.
+				;		
+				;
+				; Postconditions: Uses EBP but preserves and restores it.  
+				;
+				; Receives:
+				;		Stack Parameters: 
+				;				intro1 (by reference)= program name and author
+				;				intro2 (by reference) = program functionality
+				;
+				; Returns: None. Displays introduction.
+				;		
+				; ---------------------------------------------------------------------------------
+ 0000008C			introduction PROC
+					; Set Base Pointer
+ 0000008C  55				PUSH	EBP
+ 0000008D  8B EC			MOV		EBP, ESP
+
+					mDisplayString [EBP+12]						;address of intro1
+ 0000008F  52		     1		PUSH	EDX
+ 00000090  8B 55 0C	     1		MOV		EDX, [EBP+12]
+ 00000093  E8 00000000 E     1		CALL	WriteString
+ 00000098  5A		     1		POP		EDX
+
+					mDisplayString [EBP+8]						;address of intro2
+ 00000099  52		     1		PUSH	EDX
+
+ 0000009A  8B 55 08	     1		MOV		EDX, [EBP+8]
+ 0000009D  E8 00000000 E     1		CALL	WriteString
+ 000000A2  5A		     1		POP		EDX
+
+ 000000A3  5D				POP		EBP
+ 000000A4  C2 0008			RET		8
+
+ 000000A7			introduction ENDP
+
+				; ---------------------------------------------------------------------------------
+				; Name: getUserInput
+				;
+				; Gets prompts user to enter 10 signed numbers and stores them in an array as 
+				; a string.  Reprompts user for invalid entries.
+				;
+				; Preconditions: Parameters pushed on to stack in order listed below under Receives.
+				;			Requires mGetString MACRO and ReadVal PROC.
+				;		
+				;
+				; Postconditions: Uses registers but restores them (). 
+				;
+				; Receives:
+				;		Stack Parameters: 
+				;			prompt1	(by reference) = address of prompt for user to enter number
+				;			userInputSize = buffer size for input
+				;			userInput (by reference) = address for string user inputs
+				;			inputLen = address to store the number of characters inputted
+				;			signedNum (by reference) = address to store outputed SDWORD
+				;
+				; Returns: 
+				;		signedNum (by reference) = address to store outputed SDWORD
+				;		
+				; ---------------------------------------------------------------------------------
+
+
+				; ---------------------------------------------------------------------------------
+				; Name: readVal
+				;
+				; Converts string entered by user to signed number and validates if it is within
+				; range for SDWORD.
+				;
+				; Preconditions: Parameters pushed on to stack in order listed below under Receives.
+				;			Requires mGetString MACRO.
+				;		
+				;
+				; Postconditions: Uses registers but restores them (). 
+				;
+				; Receives:
+				;		Stack Parameters: 
+				;			prompt1	(by reference) = address of prompt for user to enter number
+				;			userInputSize = buffer size for input
+				;			userInput (by reference) = address for string user inputs
+				;			inputLen = address to store the number of characters inputted
+				;			signedNum (by reference) = address to store outputed SDWORD
+				;
+				; Returns: 
+				;		signedNum (by reference) = address to store outputed SDWORD
+				;		
+				; ---------------------------------------------------------------------------------
+
+				; ---------------------------------------------------------------------------------
+				; Name: writeVal
+				;
+				; Converts signed DWORD and displays the value.
+				;
+				; Preconditions: Parameters pushed on to stack in order listed below under Receives.
+				;			Requires mdisplayString MACRO.
+				;		
+				;
+				; Postconditions: Uses registers but restores them (). 
+				;
+				; Receives:
+				;		Stack Parameters: 
+				;			userInput (by reference) = address of string to be converted and printed
+
+				;
+				; Returns: None.  Displays converted number using mDisplayString MACRO.
+				;		
+				; ---------------------------------------------------------------------------------
+
+				; ---------------------------------------------------------------------------------
+				; Name: displayList
+				;
+				; Prints a DWORD array to the console with one space between elements.
+				;
+				; Preconditions: 5 parameters pushed to the stack in the order listed below in 
+				;				Receives section.
+				;		
+				;
+				; Postconditions: Uses EAX, EBX, ECX, EDX, EBP, ESI but preserves and restores 
+				;				all of them.
+				;
+				; Receives:
+				;		Stack Parameters: 
+				;				elemPerLine = number of elements to be displayed per line
+				;				typeSize = size of the type
+				;				ARRAYLEN = number of elements in array
+				;				listTitle (by reference) = string title to be displayed before array
+				;				outputList (by reference) = array to be displayed
+				;
+				; Returns: 
+				;		None. Displays array.
+				; ---------------------------------------------------------------------------------
+ 000000A7			displayList PROC
+					; Preserve Registers
+ 000000A7  55				PUSH	EBP
+ 000000A8  8B EC			MOV		EBP, ESP
+ 000000AA  52				PUSH	EDX
+ 000000AB  51				PUSH	ECX
+ 000000AC  53				PUSH	EBX
+ 000000AD  50				PUSH	EAX
+ 000000AE  56				PUSH	ESI
+
+ 000000AF  8B 75 08			MOV		ESI, [EBP+8]					; address of array
+					
+					mDisplayString [EBP+12]					; address of title
+ 000000B2  52		     1		PUSH	EDX
+ 000000B3  8B 55 0C	     1		MOV		EDX, [EBP+12]
+ 000000B6  E8 00000000 E     1		CALL	WriteString
+ 000000BB  5A		     1		POP		EDX
+
+ 000000BC  8B 4D 10			MOV		ECX, [EBP+16]					; length of array
+					
+					; Display Array
+ 000000BF			_Display:
+ 000000BF  8B 06			MOV		EAX, [ESI]
+ 000000C1  E8 00000000 E		CALL	WriteDec
+ 000000C6  B0 20			MOV		AL, ' '
+ 000000C8  E8 00000000 E		CALL	WriteChar
+ 000000CD  03 75 14			ADD		ESI, [EBP+20]					; element type size
+					
+					; If not nth number skip to the end, else go to next line 
+					; (nth element = Length of array-count+1/n = remainder 0)
+ 000000D0  8B 45 10			MOV		EAX, [EBP+16]					; length of array
+ 000000D3  2B C1			SUB		EAX, ECX
+ 000000D5  83 C0 01			ADD		EAX, 1
+ 000000D8  8B 5D 18			MOV		EBX, [EBP+24]					; number of elements per line
+ 000000DB  99				CDQ
+ 000000DC  F7 F3			DIV		EBX
+ 000000DE  83 FA 00			CMP		EDX, 0
+ 000000E1  75 05			JNE		_SkipNewLine
+ 000000E3  E8 00000000 E		CALL	CrLf
+
+ 000000E8			_SkipNewLine:
+ 000000E8  E2 D5			LOOP	_Display
+
+ 000000EA  E8 00000000 E		CALL	CrLf
+
+					;Restore Registers and Return
+ 000000EF  5E				POP		ESI
+ 000000F0  58				POP		EAX
+ 000000F1  5B				POP		EBX
+ 000000F2  59				POP		ECX
+ 000000F3  5A				POP		EDX
+ 000000F4  5D				POP		EBP
+ 000000F5  C2 0014			RET		20
+ 000000F8			displayList	ENDP
+
+				; ---------------------------------------------------------------------------------
+				; Name: average
+				;
+				; Calculates average of an array passed rounded down to the nearest integer.
+				;
+				; Preconditions: Parameters pushed on to stack in order listed below under Receives.
+				;			Requires and calcSum PROC.
+				;		
+				;
+				; Postconditions: Uses registers but restores them (). 
+				;
+				; Receives:
+				;		Stack Parameters: 
+				;				typeSize = size of outputList type
+				;				average (by reference) = address of average
+				;				sum (by reference) = address of sum
+				;				outputList (by reference) = address of outputList
+				;				ARRAYLEN = number of elements in array
+				;
+				; Returns: None.  Displays converted number using mDisplayString MACRO.
+				;		
+				; ---------------------------------------------------------------------------------
+ 000000F8			calcAverage PROC
+					; Preserve Registers
+ 000000F8  55				PUSH	EBP
+ 000000F9  8B EC			MOV		EBP, ESP
+ 000000FB  50				PUSH	EAX
+ 000000FC  53				PUSH	EBX
+ 000000FD  52				PUSH	EDX
+ 000000FE  57				PUSH	EDI
+ 000000FF  56				PUSH	ESI
+
+					; Calculate Sum
+ 00000100  FF 75 18			PUSH	[EBP+24]						;typeSize
+ 00000103  FF 75 10			PUSH	[EBP+16]						;address of sum 
+ 00000106  FF 75 0C			PUSH	[EBP+12]						;address of outputList
+ 00000109  FF 75 08			PUSH	[EBP+8]							;ARRAYLEN (elements in array)
+ 0000010C  E8 00000019			CALL	calcSum
+
+					; Set EDI and ESI 
+ 00000111  8B 75 10			MOV		ESI, [EBP+16]					;address of sum 
+ 00000114  8B 7D 14			MOV		EDI, [EBP+20]					;address of average
+
+					; Divide Number of Elements
+ 00000117  99				CDQ		
+ 00000118  8B 06			MOV		EAX, [ESI]						;sum 
+ 0000011A  8B 5D 08			MOV		EBX, [EBP+8]					;ARRAYLEN (elements in array)
+ 0000011D  F7 FB			IDIV	EBX
+ 0000011F  89 07			MOV		[EDI], EAX						;address of average 
+					
+					; Restore Registers and Return
+ 00000121  5E				POP		ESI
+ 00000122  5F				POP		EDI
+ 00000123  5A				POP		EDX
+ 00000124  5B				POP		EBX
+ 00000125  58				POP		EAX
+ 00000126  5D				POP		EBP
+ 00000127  C2 0014			RET		20
+ 0000012A			calcAverage ENDP
+
+				; ---------------------------------------------------------------------------------
+				; Name: calcSum
+				;
+				; Calculates the sum of integers in an array passed.
+				;
+				; Preconditions: Parameters pushed on to stack in order listed below under Receives.
+				;			
+				;		
+				;
+				; Postconditions: Uses registers but restores them (EBP, EAX, EBX, ECX, EDI, ESI). 
+				;
+				; Receives:
+				;		Stack Parameters: 
+				;				sum (by reference) = address of sum
+				;				outputList (by reference) = address of outputList
+				;				ARRAYLEN = number of elements in array
+				;
+				; Returns: None.  Displays converted number using mDisplayString MACRO.
+				;		
+				; ---------------------------------------------------------------------------------
+ 0000012A			calcSum PROC
+					; Preserve Registers
+ 0000012A  55				PUSH	EBP
+ 0000012B  8B EC			MOV		EBP, ESP
+ 0000012D  50				PUSH	EAX
+ 0000012E  53				PUSH	EBX
+ 0000012F  51				PUSH	ECX
+ 00000130  57				PUSH	EDI
+ 00000131  56				PUSH	ESI
+
+					; Set Registers to Traverse Array
+ 00000132  FC				CLD
+ 00000133  B8 00000000			MOV		EAX, 0
+ 00000138  8B 4D 08			MOV		ECX, [EBP+8]					;ARRAYLEN (elements in array)
+ 0000013B  8B 75 0C			MOV		ESI, [EBP+12]					;address of outputLlist
+ 0000013E  8B 7D 10			MOV		EDI, [EBP+16]					;address of sum	
+
+ 00000141			_NextElement:
+					; Add Elements in Array
+ 00000141  8B 1E			MOV		EBX, [ESI]
+ 00000143  03 C3			ADD		EAX, EBX
+ 00000145  03 75 14			ADD		ESI, [EBP+20]					;typeSize	
+ 00000148  E2 F7			LOOP	_NextElement
+					
+ 0000014A  89 07			MOV		[EDI], EAX						;sum
+
+					; Restore registers and Return
+ 0000014C  5E				POP		ESI
+ 0000014D  5F				POP		EDI
+ 0000014E  59				POP		ECX
+ 0000014F  5B				POP		EBX
+ 00000150  58				POP		EAX
+ 00000151  5D				POP		EBP
+ 00000152  C2 0010			RET		16
+ 00000155			calcSum ENDP
+
+				; ---------------------------------------------------------------------------------
+				; Name: displayFarewell
+				;
+				; Displays farewell message
+				;
+				; Preconditions: farewell  is pushed onto stack. Requires printString MACRO.
+				;		
+				;
+				; Postconditions: Uses EBP but preserves and restores it. Displays Farewell.
+				;
+				; Receives:
+				;		Stack Parameters: 
+				;				farewellMess (by reference) = farewell message
+				;
+				; Returns: None. Displays farewell.
+				;		
+				; ---------------------------------------------------------------------------------
+ 00000155			displayFarewell PROC
+					; Set Base Pointer
+ 00000155  55				PUSH	EBP
+ 00000156  8B EC			MOV		EBP, ESP
+
+					mDisplayString [EBP+8]							;address of farewell
+ 00000158  52		     1		PUSH	EDX
+ 00000159  8B 55 08	     1		MOV		EDX, [EBP+8]
+ 0000015C  E8 00000000 E     1		CALL	WriteString
+ 00000161  5A		     1		POP		EDX
+
+					; Restore Base Pointer
+ 00000162  5D				POP		EBP
+ 00000163  C2 0004			RET		4
+
+ 00000166			displayFarewell ENDP
+
 				END main
-Microsoft (R) Macro Assembler Version 14.27.29111.0	    09/23/20 15:26:21
+Microsoft (R) Macro Assembler Version 14.27.29112.0	    11/25/20 22:15:59
 &Project Template        (template.asm			     Symbols 2 - 1
 
 
+
+
+Macros:
+
+                N a m e                 Type
+
+mDisplayString . . . . . . . . .	Proc
+mGetString . . . . . . . . . . .	Proc
 
 
 Structures and Unions:
@@ -142,8 +693,8 @@ Segments and Groups:
 
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
-_DATA  . . . . . . . . . . . . .	32 Bit	 00000000 Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 00000007 Para	  Public  'CODE'	
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000140 Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000166 Para	  Public  'CODE'	
 
 
 Procedures, parameters, and locals:
@@ -250,7 +801,15 @@ WriteStackFrame  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 WriteString  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteToFile  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteWindowsMsg  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-main . . . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000007 Public STDCALL
+calcAverage  . . . . . . . . . .	P Near	 000000F8 _TEXT	Length= 00000032 Public STDCALL
+calcSum  . . . . . . . . . . . .	P Near	 0000012A _TEXT	Length= 0000002B Public STDCALL
+  _NextElement . . . . . . . . .	L Near	 00000141 _TEXT	
+displayFarewell  . . . . . . . .	P Near	 00000155 _TEXT	Length= 00000011 Public STDCALL
+displayList  . . . . . . . . . .	P Near	 000000A7 _TEXT	Length= 00000051 Public STDCALL
+  _Display . . . . . . . . . . .	L Near	 000000BF _TEXT	
+  _SkipNewLine . . . . . . . . .	L Near	 000000E8 _TEXT	
+introduction . . . . . . . . . .	P Near	 0000008C _TEXT	Length= 0000001B Public STDCALL
+main . . . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 0000008C Public STDCALL
 printf . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 scanf  . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 wsprintfA  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
@@ -270,6 +829,8 @@ Symbols:
 @fardata . . . . . . . . . . . .	Text   	 FLAT
 @stack . . . . . . . . . . . . .	Text   	 FLAT
 ALT_MASK . . . . . . . . . . . .	Number	 00000003h   
+ARRAYLEN . . . . . . . . . . . .	Number	 0000000Ah   
+BUFFERSIZE . . . . . . . . . . .	Number	 0000000Dh   
 CAPSLOCK_ON  . . . . . . . . . .	Number	 00000080h   
 CREATE_ALWAYS  . . . . . . . . .	Number	 00000002h   
 CREATE_NEW . . . . . . . . . . .	Number	 00000001h   
@@ -469,21 +1030,36 @@ VK_UP  . . . . . . . . . . . . .	Number	 00000026h
 WINDOW_BUFFER_SIZE_EVENT . . . .	Number	 00000004h   
 WriteConsoleOutputCharacter  . .	Text   	 WriteConsoleOutputCharacterA
 WriteConsole . . . . . . . . . .	Text   	 WriteConsoleA
+average  . . . . . . . . . . . .	DWord	 0000013C _DATA	
+avgTitle . . . . . . . . . . . .	Byte	 000000A8 _DATA	
 black  . . . . . . . . . . . . .	Number	 00000000h   
 blue . . . . . . . . . . . . . .	Number	 00000001h   
 brown  . . . . . . . . . . . . .	Number	 00000006h   
 cyan . . . . . . . . . . . . . .	Number	 00000003h   
+elemPerLine  . . . . . . . . . .	DWord	 00000130 _DATA	
 exit . . . . . . . . . . . . . .	Text   	 INVOKE ExitProcess,0
+farewell . . . . . . . . . . . .	Byte	 000000D4 _DATA	
 gray . . . . . . . . . . . . . .	Number	 00000008h   
 green  . . . . . . . . . . . . .	Number	 00000002h   
+inputLen . . . . . . . . . . . .	DWord	 0000012C _DATA	
+intro1 . . . . . . . . . . . . .	Byte	 00000000 _DATA	
+intro2 . . . . . . . . . . . . .	Byte	 0000001C _DATA	
 lightBlue  . . . . . . . . . . .	Number	 00000009h   
 lightCyan  . . . . . . . . . . .	Number	 0000000Bh   
 lightGray  . . . . . . . . . . .	Number	 00000007h   
 lightGreen . . . . . . . . . . .	Number	 0000000Ah   
 lightMagenta . . . . . . . . . .	Number	 0000000Dh   
 lightRed . . . . . . . . . . . .	Number	 0000000Ch   
+listTitle  . . . . . . . . . . .	Byte	 00000093 _DATA	
 magenta  . . . . . . . . . . . .	Number	 00000005h   
+outputList . . . . . . . . . . .	DWord	 00000100 _DATA	
+prompt1  . . . . . . . . . . . .	Byte	 00000051 _DATA	
 red  . . . . . . . . . . . . . .	Number	 00000004h   
+sumTitle . . . . . . . . . . . .	Byte	 000000A2 _DATA	
+sum  . . . . . . . . . . . . . .	QWord	 00000134 _DATA	
+typeSize . . . . . . . . . . . .	DWord	 00000128 _DATA	
+userInputSize  . . . . . . . . .	DWord	 000000FC _DATA	
+userInput  . . . . . . . . . . .	Byte	 000000EF _DATA	
 white  . . . . . . . . . . . . .	Number	 0000000Fh   
 wsprintf . . . . . . . . . . . .	Text   	 wsprintfA
 yellow . . . . . . . . . . . . .	Number	 0000000Eh   
