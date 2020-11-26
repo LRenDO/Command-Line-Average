@@ -88,10 +88,11 @@ mDisplayString MACRO strAddr:REQ
 	POP		EDX
 ENDM
 
-;_______________min -2147483648   max +2147483647
 ; Constants 
 BUFFERSIZE = 13		;max char for a valid SDWORD is 11 + null + 1 for validation
 ARRAYLEN = 10		;length of output array
+SDWMIN =	-2147483648
+SDWMAX = 2147483647
 
 .data
 ; Message and Title Variables
@@ -105,9 +106,10 @@ intro2			BYTE	"Functionality",13,10
 				BYTE	"...",13,10
 				BYTE	"...",13,10
 				BYTE	13,10,0
-prompt1			BYTE	"Enter a signed number between -2,147,483,648" 
-				BYTE	"and +2,147,483,647: ",13.10,0
-listTitle		BYTE	"You Entered:",13,10,0
+error			BYTE	"Woops! That wasn't a valid input. Let's try again",13,10,0
+prompt1			BYTE	13,10,"Enter a signed number between -2,147,483,648" 
+				BYTE	"and +2,147,483,647: ",13,10,0
+listTitle		BYTE	13,10,"You Entered:",13,10,0
 sumTitle		BYTE	"Sum: ",0
 avgTitle		BYTE	"Average (rounded down to nearest integer): ",0
 farewell		BYTE	"..., have a great day!",13,10,13,10,0
@@ -115,12 +117,12 @@ farewell		BYTE	"..., have a great day!",13,10,13,10,0
 ; Array and Calculation Variables
 userInput		BYTE	BUFFERSIZE DUP (0)
 userInputSize	DWORD	SIZEOF userInput
-outputList		SDWORD	ARRAYLEN DUP (-2147483648)
+outputList		SDWORD	ARRAYLEN DUP (2)
 typeSize		DWORD	TYPE outputList
 inputLen		DWORD	?
 elemPerLine		DWORD	10
-sum				SQWORD  0
-average			SDWORD	0
+sum				SDWORD	0
+average			DWORD	0
 
 .code
 main PROC
@@ -148,7 +150,6 @@ main PROC
 	CALL	displayList
 
 	; Calculate Average and Sum
-	PUSH	typeSize
 	PUSH	OFFSET average
 	PUSH	OFFSET sum
 	PUSH	OFFSET outputList
@@ -241,17 +242,27 @@ introduction ENDP
 ;
 ; Receives:
 ;		Stack Parameters: 
+;			SDWMIN = lowest signed 32 bit integer value
+;			SDWMAX = greatest signed 32 bit integer value
 ;			prompt1	(by reference) = address of prompt for user to enter number
 ;			userInputSize = buffer size for input
 ;			userInput (by reference) = address for string user inputs
 ;			inputLen = address to store the number of characters inputted
-;			signedNum (by reference) = address to store outputed SDWORD
+;			signedNum (by reference) = address to store outputted SDWORD
+;			isValid = address to store if number is written or not
 ;
 ; Returns: 
+;		isValid = 1 if it is valid and was written 0 if not
 ;		signedNum (by reference) = address to store outputed SDWORD
 ;		
 ; ---------------------------------------------------------------------------------
-
+	; Traverse Array
+	; If User didn't input anything
+	; If More than 11 Characters Entered Display Error Message and Return
+	; If Not a Digit Display Error Message and Return
+	; Convert to SDWORD
+	; If Greater than SDMAX Display Error Message and Return
+	; If Less than SDMIN Display Error Message and Return
 ; ---------------------------------------------------------------------------------
 ; Name: writeVal
 ;
@@ -265,12 +276,39 @@ introduction ENDP
 ;
 ; Receives:
 ;		Stack Parameters: 
-;			userInput (by reference) = address of string to be converted and printed
-
+;			DWORD = value to be converted and printed
 ;
-; Returns: None.  Displays converted number using mDisplayString MACRO.
+; Returns:
+;		Displays converted number using mDisplayString MACRO.
 ;		
 ; ---------------------------------------------------------------------------------
+writeVal PROC
+	; Preserve Registers
+	PUSH	EBP
+	MOV		EBP, ESP
+	PUSH	EAX
+	PUSH	EBX
+	PUSH	EDX
+
+	; Convert DWORD to String
+	MOV		EAX, [EBP+4]					;DWORD to be converted
+
+_NextDigit:
+	; 
+
+	; Display String
+	mDisplayString	EAX
+	
+	;JE		_NextDigit
+
+	; Restore Registers and Return
+	POP		EDX
+	POP		EBX
+	POP		EAX
+	POP		EBP
+	RET		4
+writeVal ENDP
+
 
 ; ---------------------------------------------------------------------------------
 ; Name: displayList
@@ -359,7 +397,6 @@ displayList	ENDP
 ;
 ; Receives:
 ;		Stack Parameters: 
-;				typeSize = size of outputList type
 ;				average (by reference) = address of average
 ;				sum (by reference) = address of sum
 ;				outputList (by reference) = address of outputList
@@ -374,12 +411,10 @@ calcAverage PROC
 	MOV		EBP, ESP
 	PUSH	EAX
 	PUSH	EBX
-	PUSH	EDX
 	PUSH	EDI
 	PUSH	ESI
 
 	; Calculate Sum
-	PUSH	[EBP+24]						;typeSize
 	PUSH	[EBP+16]						;address of sum 
 	PUSH	[EBP+12]						;address of outputList
 	PUSH	[EBP+8]							;ARRAYLEN (elements in array)
@@ -399,17 +434,16 @@ calcAverage PROC
 	; Restore Registers and Return
 	POP		ESI
 	POP		EDI
-	POP		EDX
 	POP		EBX
 	POP		EAX
 	POP		EBP
-	RET		20
+	RET		16
 calcAverage ENDP
 
 ; ---------------------------------------------------------------------------------
 ; Name: calcSum
 ;
-; Calculates the sum of integers in an array passed.
+; Calculates the sum of integers in a DWORD array passed.
 ;
 ; Preconditions: Parameters pushed on to stack in order listed below under Receives.
 ;			
@@ -436,20 +470,21 @@ calcSum PROC
 	PUSH	EDI
 	PUSH	ESI
 
+
 	; Set Registers to Traverse Array
-	MOV		EAX, 0
+	XOR		EBX, EBX
 	MOV		ECX, [EBP+8]					;ARRAYLEN (elements in array)
 	MOV		ESI, [EBP+12]					;address of outputLlist
-	MOV		EDI, [EBP+16]					;address of sum	
+	MOV		EDI, [EBP+16]					;address of sum
 
 _NextElement:
-	; Add Elements in Array
-	MOV		EBX, [ESI]
-	ADD		EAX, EBX
-	ADD		ESI, [EBP+20]					;typeSize	
+	; Add Elements in outputList
+	LODSD
+	ADD		EBX, EAX
 	LOOP	_NextElement
 	
-	MOV		[EDI], EAX						;sum
+	; Store in sum
+	MOV		[EDI], EBX								
 
 	; Restore registers and Return
 	POP		ESI
@@ -458,7 +493,7 @@ _NextElement:
 	POP		EBX
 	POP		EAX
 	POP		EBP
-	RET		16
+	RET		12
 calcSum ENDP
 
 ; ---------------------------------------------------------------------------------
