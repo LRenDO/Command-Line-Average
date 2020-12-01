@@ -115,6 +115,9 @@ avgTitle		BYTE	"Average (rounded down to nearest integer): ",0
 farewell		BYTE	"..., have a great day!",13,10,13,10,0
 
 ; Array and Calculation Variables
+tempStr			BYTE	12 DUP(0)
+processedStr	BYTE	12 DUP(0)
+pStringLen		DWORD	LENGTHOF processedStr
 userInput		BYTE	BUFFERSIZE DUP (0)
 userInputSize	DWORD	SIZEOF userInput
 outputList		SDWORD	ARRAYLEN DUP (2)
@@ -157,8 +160,22 @@ main PROC
 	CALL	calcAverage
 
 	; Display Sum 
+	PUSH	SDWMAX
+	PUSH	SDWMIN
+	PUSH	OFFSET tempStr
+	PUSH	pStringLen
+	PUSH	OFFSET processedStr
+	PUSH	sum
+	CALL	WriteVal
 
 	; Display Average
+	PUSH	SDWMAX
+	PUSH	SDWMIN
+	PUSH	OFFSET tempStr
+	PUSH	pStringLen
+	PUSH	OFFSET processedStr
+	PUSH	average
+	CALL	WriteVal
 
 	; Say farewell
 	PUSH	OFFSET farewell
@@ -266,17 +283,24 @@ introduction ENDP
 ; ---------------------------------------------------------------------------------
 ; Name: writeVal
 ;
-; Converts signed DWORD and displays the value.
+; Converts signed DWORD to string in reverse order.  Reverses string to correct 
+; order. Then displays the correct value. Sign is added for negative numbers.
 ;
 ; Preconditions: Parameters pushed on to stack in order listed below under Receives.
 ;			Requires mdisplayString MACRO.
 ;		
 ;
-; Postconditions: Uses registers but restores them (). 
+; Postconditions: Uses registers but restores them (EBP, EAX, EBX, EDX, EDI, ESI). 
+;			Changes processedStr, tempStr. Displays string of DWORD value.
 ;
 ; Receives:
 ;		Stack Parameters: 
-;			DWORD = value to be converted and printed
+;			SDWMAX = maximum 32 bit signed integer
+;			SDWMIN = minimum 32 bit signed integer
+;			tempStr (by reference) = used to process value
+;			pStringLen = length of processedStr
+;			processedStr (by reference) = address to store string output
+;			a DWORD value = value to be converted and printed
 ;
 ; Returns:
 ;		Displays converted number using mDisplayString MACRO.
@@ -284,29 +308,100 @@ introduction ENDP
 ; ---------------------------------------------------------------------------------
 writeVal PROC
 	; Preserve Registers
-	PUSH	EBP
-	MOV		EBP, ESP
+	LOCAL	count:DWORD
 	PUSH	EAX
 	PUSH	EBX
 	PUSH	EDX
+	PUSH	EDI
+	PUSH	ESI
 
-	; Convert DWORD to String
-	MOV		EAX, [EBP+4]					;DWORD to be converted
+	; If Min Signed DWORD Value, Set Absolute Value
+	MOV		EDX, [EBP+8]					;DWORD
+	CMP		EDX, [EBP+24]					;SDWMIN
+	JNE		_CheckNegative
+	MOV		EDX, [EBP+28]					;SDWMAX
+
+_CheckNegative:
+	; If Negative Get Absolute Value
+	CMP		EDX, 0	
+	JGE		_SetRegs
+	NEG		EDX
+
+_SetRegs:
+	; Set Registers
+	MOV		EAX, EDX						;DWORD to convert
+	MOV		EDI, [EBP+20]					;address of tempStr
+	MOV		ECX, [EBP+16]					;pStringLen
+	MOV		EBX, 10
+	MOV		count, 0						
+	CLD
 
 _NextDigit:
-	; 
+	; Calculate ASCII Code for Digit
+ 	CDQ
+	IDIV	EBX
+	PUSH	EAX
+	ADD		EDX, 48
+
+	; Store in String
+	MOV		EAX, EDX
+	STOSB	
+	INC		count
+	POP		EAX
+
+	; If Quotient is Not 0, Continue
+	CMP		EAX, 0
+	JNE		_NextDigit
+
+	; If Negative, Add Sign
+	MOV		EDX, [EBP+8]						;DWORD
+	CMP		EDX, 0								
+	JGE		_Reverse
+	MOV		AL, '-'
+	INC		count
+	STOSB
+
+	; If Minimum SDWORD, Increment Last digit (First in tempStr)
+	MOV		EDX, [EBP+8]					;DWORD
+	CMP		EDX, [EBP+24]					;SDWMIN
+	JNE		_Reverse
+	MOV		EDI, [EBP+20]
+	INC		BYTE PTR [EDI] 					;SDWMAX
+	
+_Reverse:
+	; Set Registers for Reversal
+	MOV		EDI, [EBP+12]						;address of processedStr
+	MOV		ESI, [EBP+20]						;address of tempStr
+	ADD		ESI, count		
+	DEC		ESI									;last element
+	MOV		ECX, count
+	
+	; Reverse String from Source to Destination
+_NextElement:
+	STD
+	LODSB
+	CLD
+	STOSB
+	LOOP	_NextElement
 
 	; Display String
-	mDisplayString	EAX
-	
-	;JE		_NextDigit
+	mDisplayString		[EBP+12]				;address of tempStr processedStr
+
+	; Clear Arrays
+	MOV		ECX, [EBP+16]						;pStringLen
+	MOV		EDI, [EBP+12]						;address of processedStr
+	MOV		EAX, 0
+	REP		STOSB
+	MOV		EDI, [EBP+20]						;address of tempStr
+	REP		STOSB
 
 	; Restore Registers and Return
+	POP		ESI
+	POP		EDI
 	POP		EDX
 	POP		EBX
 	POP		EAX
-	POP		EBP
-	RET		4
+	RET		24
 writeVal ENDP
 
 
