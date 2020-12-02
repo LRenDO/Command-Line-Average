@@ -44,6 +44,7 @@ mGetString MACRO strAddress:REQ, buffSize:REQ, input:REQ, charEntered:REQ
 	PUSH	EDX
 	PUSH	ECX
 	PUSH	EAX
+	PUSH	EDI
 
 	; Prompt User 
 	mDisplayString	strAddress
@@ -52,9 +53,11 @@ mGetString MACRO strAddress:REQ, buffSize:REQ, input:REQ, charEntered:REQ
 	MOV		EDX, input
 	MOV		ECX, buffSize
 	CALL	ReadString
-	MOV		charEntered, EAX
+	MOV		EDI, charEntered
+	MOV		[EDI], EAX
 
 	; Restore Registers
+	POP		EDI
 	POP		EAX
 	POP		ECX
 	POP		EDX
@@ -107,7 +110,7 @@ intro2			BYTE	"Functionality",13,10
 				BYTE	"...",13,10
 				BYTE	13,10,0
 error			BYTE	"Woops! That wasn't a valid input. Let's try again",13,10,0
-prompt1			BYTE	13,10,"Enter a signed number between -2,147,483,648" 
+prompt1			BYTE	13,10,"Enter a signed number between -2,147,483,648 " 
 				BYTE	"and +2,147,483,647: ",13,10,0
 listTitle		BYTE	13,10,"You Entered:",13,10,0
 sumTitle		BYTE	"Sum: ",0
@@ -126,6 +129,8 @@ inputLen		DWORD	?
 elemPerLine		DWORD	10
 sum				SDWORD	0
 average			DWORD	0
+isValid			DWORD	0
+signedNum		SDWORD	?
 
 .code
 main PROC
@@ -136,13 +141,21 @@ main PROC
 	CALL	introduction	
 
 
-	mGetString OFFSET prompt1, userInputSize, OFFSET userInput, inputLen
+;___	mGetString OFFSET prompt1, userInputSize, OFFSET userInput, inputLen
 
 	mDisplayString OFFSET userInput
 
-	; Get 10 Valid Integers from User input
-
-	; Get and Convert User Inputted String
+	; Get 10 Valid Integers from User
+	PUSH	OFFSET error
+	PUSH	OFFSET inputLen
+	PUSH	SDWMIN
+	PUSH	SDWMAX
+	PUSH	OFFSET prompt1
+	PUSH	userInputSize
+	PUSH	OFFSET userInput
+	PUSH	OFFSET signedNum
+	PUSH	OFFSET isValid
+	CALL	readVal
 
 	; Display userInput Array
 	PUSH	elemPerLine
@@ -220,7 +233,7 @@ introduction PROC
 introduction ENDP
 
 ; ---------------------------------------------------------------------------------
-; Name: getUserInput
+; Name: getUserInputs
 ;
 ; Gets prompts user to enter 10 signed numbers and stores them in an array as 
 ; a string.  Reprompts user for invalid entries.
@@ -252,34 +265,200 @@ introduction ENDP
 ; range for SDWORD.
 ;
 ; Preconditions: Parameters pushed on to stack in order listed below under Receives.
-;			Requires mGetString MACRO.
+;			Requires mGetString MACRO and mDisplayString  MACRO.
 ;		
 ;
-; Postconditions: Uses registers but restores them (). 
+; Postconditions: Uses registers but restores them (EBP, EAX, EBX, ECX, EDX, 
+;			EDI, ESI). 
 ;
 ; Receives:
 ;		Stack Parameters: 
+;			error (by reference) = address of error message
+;			inputLen (by reference) = address for number of characters inputted
 ;			SDWMIN = lowest signed 32 bit integer value
 ;			SDWMAX = greatest signed 32 bit integer value
 ;			prompt1	(by reference) = address of prompt for user to enter number
 ;			userInputSize = buffer size for input
 ;			userInput (by reference) = address for string user inputs
-;			inputLen = address to store the number of characters inputted
 ;			signedNum (by reference) = address to store outputted SDWORD
-;			isValid = address to store if number is written or not
+;			isValid (by reference) = address to store if number is written or not
 ;
 ; Returns: 
 ;		isValid = 1 if it is valid and was written 0 if not
 ;		signedNum (by reference) = address to store outputed SDWORD
 ;		
 ; ---------------------------------------------------------------------------------
-	; Traverse Array
-	; If User didn't input anything
-	; If More than 11 Characters Entered Display Error Message and Return
-	; If Not a Digit Display Error Message and Return
-	; Convert to SDWORD
-	; If Greater than SDMAX Display Error Message and Return
-	; If Less than SDMIN Display Error Message and Return
+readVal PROC
+
+	; Preserve Registers
+	LOCAL	hasSign:BYTE, isNeg:BYTE, isPos:BYTE, oFlag
+	PUSH	EAX
+	PUSH	EBX
+	PUSH	ECX
+	PUSH	EDX
+	PUSH	EDI
+	PUSH	ESI
+
+	; Get Input from User  params: (prompt1, userInputSize, userInput, inputLen)
+	mGetString	[EBP+24], [EBP+20], [EBP+16], [EBP+36] 									
+	
+	;---------------------------------------
+	; Checks for No Input
+	;---------------------------------------
+	; If User Didn't Input Anything, Display Error Message and Return
+	CMP		BYTE PTR [ESI], 0
+	JE		_PrintError
+
+	;---------------------------------------
+	; Checks Length of Input
+	;---------------------------------------
+	; Set Registers and Local Variables
+	MOV		ESI, [EBP+16]					;userInput
+	MOV		hasSign, 0
+	MOV		isNeg, 0
+	MOV		isPos, 0
+	MOV		oFlag, 0
+	MOV		EDI, [EBP+36]				;inputLen
+	MOV		ECX, [EDI]
+	XOR		EAX, EAX
+
+	; If More than 11 Characters Entered, Display Error Message and Return
+	CMP		ECX, 11
+	JG		_PrintError
+
+	;---------------------------------------
+	; Checks If First Character is a Sign
+	;---------------------------------------
+	CLD
+
+	; If First Character is a +, Move to Next Char, DEC Count, Go to Loop
+	CMP		BYTE PTR [ESI], '+'
+	JE		_PlusSign
+
+	; If First Character is a -, Move to Next Char, DEC Count, Go to Loop 
+	CMP		BYTE PTR [ESI], '-'
+	JNE		_IsDigitLoop
+	INC		ESI
+	DEC		ECX
+	MOV		hasSign, 1
+	MOV		isNeg, 1
+	JMP		_IsDigitLoop
+
+_PlusSign:
+	INC		ESI
+	DEC		ECX
+	MOV		hasSign, 1
+	MOV		isPos, 1
+
+	;---------------------------------------
+	; Checks Characters are Digits
+	;---------------------------------------'
+_IsDigitLoop:
+	LODSB
+
+	; If Character Code is less than Zero's, Print Error
+	CMP		AL, '0'
+	JB		_PrintError
+
+	; If it is Greater than 9's, Print Error
+	CMP		AL, '9'
+	JA		_PrintError
+
+	LOOP	_IsDigitLoop
+	
+	;---------------------------------------
+	; Converts to SDWORD and Checks for Valid SDWORD Range
+	;---------------------------------------
+	; Reset Registers
+	MOV		ESI, [EBP+16]					;userInput
+	MOV		ECX, [EDI]						;inputLen
+	XOR		EBX, EBX
+	XOR		EDX, EDX
+	CLD
+
+	; If Signed, Start at Second Character
+	CMP		hasSign, 1
+	JNE		_Convert
+	INC		ESI
+	DEC		ECX
+
+COMMENT !
+;___ FPU for this???
+	FINIT
+_Convert:
+	; Convert from ASCII to Signed Digit. 
+	; result = 10*result+(n-48) = 10 result * n 48 - +
+	XOR		EAX, EAX
+	LODSB
+	FILD	EAX
+	FILD	EBX
+	FMUL
+
+
+	LOOP	_Convert
+!
+
+_Convert:
+	; Convert from ASCII to Signed Digit. result = 10*result+(n-48)
+	XOR		EAX, EAX
+	LODSB
+	SUB		EAX, 48
+	MOV		EBX, EAX
+	MOV		EAX, 10
+	IMUL	EDX
+
+	;If Overflow, Display Error message
+	JO		_PrintError
+	ADD		EAX, EBX
+
+	;If Overflow Flag
+	JNO		_Continue
+	MOV		oFlag, 1
+_Continue:
+	MOV		EDX, EAX
+	LOOP	_Convert
+	
+	; If Negative, Invert
+	CMP		isNeg, 1
+	JNE		_CheckRange
+	NEG		EAX
+
+	; If Minimum Value, Store and Return
+	CMP		EAX, [EBP+32]				;SDMIN
+	JE		_StoreResult
+
+_CheckRange:
+	; If Overflow, Display Error message
+	CMP		oFlag, 1
+	JE		_PrintError
+
+	;---------------------------------------
+	; Stores Result or Prints Error and Returns
+	;---------------------------------------
+_StoreResult:
+	; Store Result
+	MOV		EDI, [EBP+12]					;signedNum
+	MOV		[EDI], EAX						;signedNum
+	MOV		EDI, [EBP+8]					;isValid
+	MOV		DWORD PTR [EDI], 1				;isValid
+	JMP		_Return
+
+_PrintError:
+	; Print Error
+	mDisplayString	[EBP+40]				;error
+
+_Return:
+; Restore Registers and Return
+	POP		ESI
+	POP		EDI
+	POP		EDX
+	POP		ECX
+	POP		EBX
+	POP		EAX
+	RET		36
+
+readVal ENDP
+
 ; ---------------------------------------------------------------------------------
 ; Name: writeVal
 ;
@@ -388,7 +567,7 @@ _NextElement:
 	mDisplayString		[EBP+12]				;address of tempStr processedStr
 
 	; Clear Arrays
-	MOV		ECX, [EBP+16]						;pStringLen
+	MOV		ECX, [EBP+16]						;pStringL
 	MOV		EDI, [EBP+12]						;address of processedStr
 	MOV		EAX, 0
 	REP		STOSB
