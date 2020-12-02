@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 13:23:30
+Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 14:16:58
 8Stringing Signs and Signing Strings (Proj6_demeisol.asm     Page 1 - 1
 
 
@@ -216,7 +216,7 @@ Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 13:23:30
  000001BF 00000004		typeSize		DWORD	TYPE outputList
  000001C3 00000000		inputLen		DWORD	?
  000001C7 00000000		sum				SDWORD	0
- 000001CB 00000000		average			DWORD	0
+ 000001CB 00000000		average			SDWORD	0
  000001CF 00000000		isValid			DWORD	0
  000001D3 00000000		signedNum		SDWORD	?
 
@@ -252,7 +252,7 @@ Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 13:23:30
  00000068  6A 0A			PUSH	ARRAYLEN
  0000006A  68 000000EC R		PUSH	OFFSET listTitle
  0000006F  68 00000197 R		PUSH	OFFSET outputList
- 00000074  E8 00000280			CALL	displayList
+ 00000074  E8 00000284			CALL	displayList
 
 					; Calculate Average and Sum
  00000079  FF 35 000001BF R		PUSH	typeSize
@@ -260,7 +260,7 @@ Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 13:23:30
  00000084  68 000001C7 R		PUSH	OFFSET sum
  00000089  68 00000197 R		PUSH	OFFSET outputList
  0000008E  6A 0A			PUSH	ARRAYLEN
- 00000090  E8 000002A6			CALL	calcAverage
+ 00000090  E8 000002AA			CALL	calcAverage
 
 					; Display Sum 
 					mdisplayString	OFFSET sumTitle
@@ -674,110 +674,111 @@ Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 13:23:30
 					; If Min Signed DWORD Value, Set Absolute Value
  00000269  8B 55 08			MOV		EDX, [EBP+8]					;DWORD
  0000026C  3B 55 18			CMP		EDX, [EBP+24]					;SDWMIN
- 0000026F  75 03			JNE		_CheckNegative
- 00000271  8B 55 1C			MOV		EDX, [EBP+28]					;SDWMAX
+ 0000026F  75 07			JNE		_CheckNegative
+ 00000271  C6 45 FB 01			MOV		isNeg, 1
+ 00000275  8B 55 1C			MOV		EDX, [EBP+28]					;SDWMAX
 
- 00000274			_CheckNegative:
+ 00000278			_CheckNegative:
 					; If Negative Get Absolute Value
- 00000274  83 FA 00			CMP		EDX, 0	
- 00000277  7D 06			JGE		_SetRegs
- 00000279  F7 DA			NEG		EDX
- 0000027B  C6 45 FB 01			MOV		isNeg, 1
+ 00000278  83 FA 00			CMP		EDX, 0	
+ 0000027B  7D 06			JGE		_SetRegs
+ 0000027D  F7 DA			NEG		EDX
+ 0000027F  C6 45 FB 01			MOV		isNeg, 1
 
- 0000027F			_SetRegs:
+ 00000283			_SetRegs:
 					; Set Registers
- 0000027F  8B C2			MOV		EAX, EDX						;DWORD to convert
- 00000281  8B 7D 14			MOV		EDI, [EBP+20]					;address of tempStr
- 00000284  8B 4D 10			MOV		ECX, [EBP+16]					;pStringLen
- 00000287  BB 0000000A			MOV		EBX, 10
- 0000028C  C7 45 FC			MOV		count, 0						
+ 00000283  8B C2			MOV		EAX, EDX						;DWORD to convert
+ 00000285  8B 7D 14			MOV		EDI, [EBP+20]					;address of tempStr
+ 00000288  8B 4D 10			MOV		ECX, [EBP+16]					;pStringLen
+ 0000028B  BB 0000000A			MOV		EBX, 10
+ 00000290  C7 45 FC			MOV		count, 0						
 	   00000000
- 00000293  FC				CLD
+ 00000297  FC				CLD
 
- 00000294			_NextDigit:
+ 00000298			_NextDigit:
 					; Calculate ASCII Code for Digit
- 00000294  99			 	CDQ
- 00000295  F7 FB			IDIV	EBX
- 00000297  50				PUSH	EAX
- 00000298  83 C2 30			ADD		EDX, 48
+ 00000298  99			 	CDQ
+ 00000299  F7 FB			IDIV	EBX
+ 0000029B  50				PUSH	EAX
+ 0000029C  83 C2 30			ADD		EDX, 48
 
 					; Store in String
- 0000029B  8B C2			MOV		EAX, EDX
- 0000029D  AA				STOSB	
- 0000029E  FF 45 FC			INC		count
- 000002A1  58				POP		EAX
+ 0000029F  8B C2			MOV		EAX, EDX
+ 000002A1  AA				STOSB	
+ 000002A2  FF 45 FC			INC		count
+ 000002A5  58				POP		EAX
 
 					; If Quotient is Not 0, Continue
- 000002A2  83 F8 00			CMP		EAX, 0
- 000002A5  75 ED			JNE		_NextDigit
+ 000002A6  83 F8 00			CMP		EAX, 0
+ 000002A9  75 ED			JNE		_NextDigit
 
 					; If Negative, Add Sign
- 000002A7  80 7D FB 01			CMP		isNeg, 1								
- 000002AB  75 13			JNE		_Reverse
- 000002AD  B0 2D			MOV		AL, '-'
- 000002AF  FF 45 FC			INC		count
- 000002B2  AA				STOSB
+ 000002AB  80 7D FB 01			CMP		isNeg, 1								
+ 000002AF  75 13			JNE		_Reverse
+ 000002B1  B0 2D			MOV		AL, '-'
+ 000002B3  FF 45 FC			INC		count
+ 000002B6  AA				STOSB
 
 					; If Minimum SDWORD, Increment Last digit (First in tempStr)
- 000002B3  8B 55 08			MOV		EDX, [EBP+8]					;DWORD
- 000002B6  3B 55 18			CMP		EDX, [EBP+24]					;SDWMIN
- 000002B9  75 05			JNE		_Reverse
- 000002BB  8B 7D 14			MOV		EDI, [EBP+20]
- 000002BE  FE 07			INC		BYTE PTR [EDI] 					;SDWMAX
+ 000002B7  8B 55 08			MOV		EDX, [EBP+8]					;DWORD
+ 000002BA  3B 55 18			CMP		EDX, [EBP+24]					;SDWMIN
+ 000002BD  75 05			JNE		_Reverse
+ 000002BF  8B 7D 14			MOV		EDI, [EBP+20]					;tempStr
+ 000002C2  FE 07			INC		BYTE PTR [EDI] 					;SDWMAX
 					
- 000002C0			_Reverse:
+ 000002C4			_Reverse:
 					; Set Registers for Reversal
- 000002C0  8B 7D 0C			MOV		EDI, [EBP+12]					;address of processedStr
- 000002C3  8B 75 14			MOV		ESI, [EBP+20]					;address of tempStr
- 000002C6  03 75 FC			ADD		ESI, count		
- 000002C9  4E				DEC		ESI								;last element
- 000002CA  8B 4D FC			MOV		ECX, count
+ 000002C4  8B 7D 0C			MOV		EDI, [EBP+12]					;address of processedStr
+ 000002C7  8B 75 14			MOV		ESI, [EBP+20]					;address of tempStr
+ 000002CA  03 75 FC			ADD		ESI, count		
+ 000002CD  4E				DEC		ESI								;last element
+ 000002CE  8B 4D FC			MOV		ECX, count
 					
 					; Reverse String from Source to Destination
- 000002CD			_NextElement:
- 000002CD  FD				STD
- 000002CE  AC				LODSB
- 000002CF  FC				CLD
- 000002D0  AA				STOSB
- 000002D1  E2 FA			LOOP	_NextElement
+ 000002D1			_NextElement:
+ 000002D1  FD				STD
+ 000002D2  AC				LODSB
+ 000002D3  FC				CLD
+ 000002D4  AA				STOSB
+ 000002D5  E2 FA			LOOP	_NextElement
 
 					; Display String
 					mDisplayString		[EBP+12]				;address of tempStr processedStr
- 000002D3  52		     1		PUSH	EDX
- 000002D4  8B 55 0C	     1		MOV		EDX, [EBP+12]
- 000002D7  E8 00000000 E     1		CALL	WriteString
- 000002DC  5A		     1		POP		EDX
+ 000002D7  52		     1		PUSH	EDX
+ 000002D8  8B 55 0C	     1		MOV		EDX, [EBP+12]
+ 000002DB  E8 00000000 E     1		CALL	WriteString
+ 000002E0  5A		     1		POP		EDX
 
 					; Clear Arrays
- 000002DD  8B 4D 10			MOV		ECX, [EBP+16]						;pStringL
- 000002E0  8B 7D 0C			MOV		EDI, [EBP+12]						;address of processedStr
- 000002E3  B8 00000000			MOV		EAX, 0
- 000002E8  F3/ AA			REP		STOSB
- 000002EA  8B 7D 14			MOV		EDI, [EBP+20]						;address of tempStr
- 000002ED  F3/ AA			REP		STOSB
+ 000002E1  8B 4D 10			MOV		ECX, [EBP+16]						;pStringL
+ 000002E4  8B 7D 0C			MOV		EDI, [EBP+12]						;address of processedStr
+ 000002E7  B8 00000000			MOV		EAX, 0
+ 000002EC  F3/ AA			REP		STOSB
+ 000002EE  8B 7D 14			MOV		EDI, [EBP+20]						;address of tempStr
+ 000002F1  F3/ AA			REP		STOSB
 
 					; Restore Registers and Return
- 000002EF  5E				POP		ESI
- 000002F0  5F				POP		EDI
- 000002F1  5A				POP		EDX
- 000002F2  59				POP		ECX
- 000002F3  5B				POP		EBX
- 000002F4  58				POP		EAX
- 000002F5  C9		   *	    leave  
- 000002F6  C2 0018			RET		24
- 000002F9			writeVal ENDP
+ 000002F3  5E				POP		ESI
+ 000002F4  5F				POP		EDI
+ 000002F5  5A				POP		EDX
+ 000002F6  59				POP		ECX
+ 000002F7  5B				POP		EBX
+ 000002F8  58				POP		EAX
+ 000002F9  C9		   *	    leave  
+ 000002FA  C2 0018			RET		24
+ 000002FD			writeVal ENDP
 
 
 				; ---------------------------------------------------------------------------------
 				; Name: displayList
 				;
-				; Prints a DWORD array to the console with one space between elements.
+				; Prints a DWORD array to the console with one space and comma between elements.
 				;
 				; Preconditions: 5 parameters pushed to the stack in the order listed below in 
 				;				Receives section.
 				;		
 				;
-				; Postconditions: Uses EAX, EBX, ECX, EDX, EBP, ESI but preserves and restores 
+				; Postconditions: Uses ECX, EBP, ESI but preserves and restores 
 				;				all of them.
 				;
 				; Receives:
@@ -795,51 +796,51 @@ Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 13:23:30
 				; Returns: 
 				;		None. Displays array.
 				; ---------------------------------------------------------------------------------
- 000002F9			displayList PROC
+ 000002FD			displayList PROC
 					; Preserve Registers
- 000002F9  55				PUSH	EBP
- 000002FA  8B EC			MOV		EBP, ESP
- 000002FC  51				PUSH	ECX
- 000002FD  56				PUSH	ESI
+ 000002FD  55				PUSH	EBP
+ 000002FE  8B EC			MOV		EBP, ESP
+ 00000300  51				PUSH	ECX
+ 00000301  56				PUSH	ESI
 
 					; Set Registers
- 000002FE  8B 75 08			MOV		ESI, [EBP+8]					;address of array
- 00000301  8B 4D 10			MOV		ECX, [EBP+16]					;length of array
+ 00000302  8B 75 08			MOV		ESI, [EBP+8]					;address of array
+ 00000305  8B 4D 10			MOV		ECX, [EBP+16]					;length of array
 
 					; Display Title
 					mDisplayString [EBP+12]					;address of title
- 00000304  52		     1		PUSH	EDX
- 00000305  8B 55 0C	     1		MOV		EDX, [EBP+12]
- 00000308  E8 00000000 E     1		CALL	WriteString
- 0000030D  5A		     1		POP		EDX
+ 00000308  52		     1		PUSH	EDX
+ 00000309  8B 55 0C	     1		MOV		EDX, [EBP+12]
+ 0000030C  E8 00000000 E     1		CALL	WriteString
+ 00000311  5A		     1		POP		EDX
 
 					
 					; Display Array
- 0000030E			_Display:
- 0000030E  AD				LODSD
- 0000030F  FF 75 24			PUSH	[EBP+36]						;SDWMAX
- 00000312  FF 75 20			PUSH	[EBP+32]						;SDWMIN
- 00000315  FF 75 1C			PUSH	[EBP+28]						;address of tempStr
- 00000318  FF 75 18			PUSH	[EBP+24]						;pStringLen
- 0000031B  FF 75 14			PUSH	[EBP+20]						;address of processedStr
- 0000031E  50				PUSH	EAX								;element
- 0000031F  E8 FFFFFF35			CALL	writeVal				
- 00000324  83 F9 01			CMP		ECX, 1
- 00000327  74 0C			JE		_Return
+ 00000312			_Display:
+ 00000312  AD				LODSD
+ 00000313  FF 75 24			PUSH	[EBP+36]						;SDWMAX
+ 00000316  FF 75 20			PUSH	[EBP+32]						;SDWMIN
+ 00000319  FF 75 1C			PUSH	[EBP+28]						;address of tempStr
+ 0000031C  FF 75 18			PUSH	[EBP+24]						;pStringLen
+ 0000031F  FF 75 14			PUSH	[EBP+20]						;address of processedStr
+ 00000322  50				PUSH	EAX								;element
+ 00000323  E8 FFFFFF31			CALL	writeVal				
+ 00000328  83 F9 01			CMP		ECX, 1
+ 0000032B  74 0C			JE		_Return
 					mDisplayString	[EBP+40]				;spacer
- 00000329  52		     1		PUSH	EDX
- 0000032A  8B 55 28	     1		MOV		EDX, [EBP+40]
- 0000032D  E8 00000000 E     1		CALL	WriteString
- 00000332  5A		     1		POP		EDX
- 00000333  E2 D9			LOOP	_Display
+ 0000032D  52		     1		PUSH	EDX
+ 0000032E  8B 55 28	     1		MOV		EDX, [EBP+40]
+ 00000331  E8 00000000 E     1		CALL	WriteString
+ 00000336  5A		     1		POP		EDX
+ 00000337  E2 D9			LOOP	_Display
 
- 00000335			_Return:
+ 00000339			_Return:
 					;Restore Registers and Return
- 00000335  5E				POP		ESI
- 00000336  59				POP		ECX
- 00000337  5D				POP		EBP
- 00000338  C2 0024			RET		36
- 0000033B			displayList	ENDP
+ 00000339  5E				POP		ESI
+ 0000033A  59				POP		ECX
+ 0000033B  5D				POP		EBP
+ 0000033C  C2 0024			RET		36
+ 0000033F			displayList	ENDP
 
 				; ---------------------------------------------------------------------------------
 				; Name: calcAverage
@@ -863,41 +864,41 @@ Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 13:23:30
 				; Returns: None.  Displays converted number using mDisplayString MACRO.
 				;		
 				; ---------------------------------------------------------------------------------
- 0000033B			calcAverage PROC
+ 0000033F			calcAverage PROC
 					; Preserve Registers
- 0000033B  55				PUSH	EBP
- 0000033C  8B EC			MOV		EBP, ESP
- 0000033E  50				PUSH	EAX
- 0000033F  53				PUSH	EBX
- 00000340  57				PUSH	EDI
- 00000341  56				PUSH	ESI
+ 0000033F  55				PUSH	EBP
+ 00000340  8B EC			MOV		EBP, ESP
+ 00000342  50				PUSH	EAX
+ 00000343  53				PUSH	EBX
+ 00000344  57				PUSH	EDI
+ 00000345  56				PUSH	ESI
 
 					; Calculate Sum
- 00000342  FF 75 18			PUSH	[EBP+24]
- 00000345  FF 75 10			PUSH	[EBP+16]						;address of sum 
- 00000348  FF 75 0C			PUSH	[EBP+12]						;address of outputList
- 0000034B  FF 75 08			PUSH	[EBP+8]							;ARRAYLEN (elements in array)
- 0000034E  E8 00000018			CALL	calcSum
+ 00000346  FF 75 18			PUSH	[EBP+24]
+ 00000349  FF 75 10			PUSH	[EBP+16]						;address of sum 
+ 0000034C  FF 75 0C			PUSH	[EBP+12]						;address of outputList
+ 0000034F  FF 75 08			PUSH	[EBP+8]							;ARRAYLEN (elements in array)
+ 00000352  E8 0000001A			CALL	calcSum
 
 					; Set EDI and ESI 
- 00000353  8B 75 10			MOV		ESI, [EBP+16]					;address of sum 
- 00000356  8B 7D 14			MOV		EDI, [EBP+20]					;address of average
+ 00000357  8B 75 10			MOV		ESI, [EBP+16]					;address of sum 
+ 0000035A  8B 7D 14			MOV		EDI, [EBP+20]					;address of average
 
 					; Divide Number of Elements
- 00000359  99				CDQ		
- 0000035A  8B 06			MOV		EAX, [ESI]						;sum 
- 0000035C  8B 5D 08			MOV		EBX, [EBP+8]					;ARRAYLEN (elements in array)
- 0000035F  F7 FB			IDIV	EBX
- 00000361  89 07			MOV		[EDI], EAX						;address of average 
-					
+ 0000035D  9B DB E3			FINIT
+ 00000360  DB 06			FILD	SDWORD PTR [ESI]
+ 00000362  DB 45 08			FILD	SDWORD PTR [EBP+8]
+ 00000365  DE F9			FDIV
+ 00000367  DB 1F			FISTP	SDWORD PTR [EDI]
+
 					; Restore Registers and Return
- 00000363  5E				POP		ESI
- 00000364  5F				POP		EDI
- 00000365  5B				POP		EBX
- 00000366  58				POP		EAX
- 00000367  5D				POP		EBP
- 00000368  C2 0014			RET		20
- 0000036B			calcAverage ENDP
+ 00000369  5E				POP		ESI
+ 0000036A  5F				POP		EDI
+ 0000036B  5B				POP		EBX
+ 0000036C  58				POP		EAX
+ 0000036D  5D				POP		EBP
+ 0000036E  C2 0014			RET		20
+ 00000371			calcAverage ENDP
 
 				; ---------------------------------------------------------------------------------
 				; Name: calcSum
@@ -908,7 +909,7 @@ Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 13:23:30
 				;			
 				;		
 				;
-				; Postconditions: Uses registers but restores them (EBP, EAX, EBX, ECX, EDI, ESI). 
+				; Postconditions: Uses registers but restores them (EBP, ECX, EDI, ESI). 
 				;
 				; Receives:
 				;		Stack Parameters: 
@@ -920,46 +921,39 @@ Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 13:23:30
 				; Returns: None.  Displays converted number using mDisplayString MACRO.
 				;		
 				; ---------------------------------------------------------------------------------
- 0000036B			calcSum PROC
+ 00000371			calcSum PROC
 					; Preserve Registers
- 0000036B  55				PUSH	EBP
- 0000036C  8B EC			MOV		EBP, ESP
- 0000036E  50				PUSH	EAX
- 0000036F  53				PUSH	EBX
- 00000370  51				PUSH	ECX
- 00000371  57				PUSH	EDI
- 00000372  56				PUSH	ESI
+ 00000371  55				PUSH	EBP
+ 00000372  8B EC			MOV		EBP, ESP
+ 00000374  51				PUSH	ECX
+ 00000375  57				PUSH	EDI
+ 00000376  56				PUSH	ESI
 
 
 					; Set Registers to Traverse Array
- 00000373  33 DB			XOR		EBX, EBX
- 00000375  8B 4D 08			MOV		ECX, [EBP+8]					;ARRAYLEN (elements in array)
- 00000378  8B 75 0C			MOV		ESI, [EBP+12]					;address of outputLlist
- 0000037B  8B 7D 10			MOV		EDI, [EBP+16]					;address of sum
+ 00000377  8B 4D 08			MOV		ECX, [EBP+8]					;ARRAYLEN (elements in array)
+ 0000037A  8B 75 0C			MOV		ESI, [EBP+12]					;address of outputLlist
+ 0000037D  8B 7D 10			MOV		EDI, [EBP+16]					;address of sum
 
- 0000037E  9B DB E3			FINIT
- 00000381  DB 06			FILD	SDWORD PTR [ESI]
- 00000383  03 75 14			ADD		ESI, [EBP+20]					;typeSize
- 00000386  49				DEC		ECX
+ 00000380  9B DB E3			FINIT
+ 00000383  DB 06			FILD	SDWORD PTR [ESI]
+ 00000385  03 75 14			ADD		ESI, [EBP+20]					;typeSize
+ 00000388  49				DEC		ECX
 
- 00000387			_NextElement:
+ 00000389			_NextElement:
 					; Add Elements in outputList
- 00000387  DB 06			FILD	SDWORD PTR [ESI]
- 00000389  DE C1			FADD
- 0000038B  03 75 14			ADD		ESI, [EBP+20]					;typeSize
-					;ADD		EBX, EAX
- 0000038E  E2 F7			LOOP	_NextElement
+ 00000389  DB 06			FILD	SDWORD PTR [ESI]
+ 0000038B  DE C1			FADD
+ 0000038D  03 75 14			ADD		ESI, [EBP+20]					;typeSize
+ 00000390  E2 F7			LOOP	_NextElement
 					
 					; Store in sum
- 00000390  DB 1F			FISTP	SDWORD PTR [EDI]
-					;MOV		[EDI], EBX								
+ 00000392  DB 1F			FISTP	SDWORD PTR [EDI]
 
 					; Restore registers and Return
- 00000392  5E				POP		ESI
- 00000393  5F				POP		EDI
- 00000394  59				POP		ECX
- 00000395  5B				POP		EBX
- 00000396  58				POP		EAX
+ 00000394  5E				POP		ESI
+ 00000395  5F				POP		EDI
+ 00000396  59				POP		ECX
  00000397  5D				POP		EBP
  00000398  C2 0010			RET		16
  0000039B			calcSum ENDP
@@ -999,7 +993,7 @@ Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 13:23:30
  000003AC			displayFarewell ENDP
 
 				END main
-Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 13:23:30
+Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 14:16:58
 8Stringing Signs and Signing Strings (Proj6_demeisol.asm     Symbols 2 - 1
 
 
@@ -1209,13 +1203,13 @@ WriteStackFrame  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 WriteString  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteToFile  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteWindowsMsg  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-calcAverage  . . . . . . . . . .	P Near	 0000033B _TEXT	Length= 00000030 Public STDCALL
-calcSum  . . . . . . . . . . . .	P Near	 0000036B _TEXT	Length= 00000030 Public STDCALL
-  _NextElement . . . . . . . . .	L Near	 00000387 _TEXT	
+calcAverage  . . . . . . . . . .	P Near	 0000033F _TEXT	Length= 00000032 Public STDCALL
+calcSum  . . . . . . . . . . . .	P Near	 00000371 _TEXT	Length= 0000002A Public STDCALL
+  _NextElement . . . . . . . . .	L Near	 00000389 _TEXT	
 displayFarewell  . . . . . . . .	P Near	 0000039B _TEXT	Length= 00000011 Public STDCALL
-displayList  . . . . . . . . . .	P Near	 000002F9 _TEXT	Length= 00000042 Public STDCALL
-  _Display . . . . . . . . . . .	L Near	 0000030E _TEXT	
-  _Return  . . . . . . . . . . .	L Near	 00000335 _TEXT	
+displayList  . . . . . . . . . .	P Near	 000002FD _TEXT	Length= 00000042 Public STDCALL
+  _Display . . . . . . . . . . .	L Near	 00000312 _TEXT	
+  _Return  . . . . . . . . . . .	L Near	 00000339 _TEXT	
 getUserInputs  . . . . . . . . .	P Near	 00000123 _TEXT	Length= 00000044 Public STDCALL
   _NextElement . . . . . . . . .	L Near	 0000012F _TEXT	
 introduction . . . . . . . . . .	P Near	 00000108 _TEXT	Length= 0000001B Public STDCALL
@@ -1235,14 +1229,14 @@ readVal  . . . . . . . . . . . .	P Near	 00000167 _TEXT	Length= 000000F2 Public 
   _PrintError  . . . . . . . . .	L Near	 00000245 _TEXT	
   _Return  . . . . . . . . . . .	L Near	 0000024F _TEXT	
 scanf  . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
-writeVal . . . . . . . . . . . .	P Near	 00000259 _TEXT	Length= 000000A0 Public STDCALL
+writeVal . . . . . . . . . . . .	P Near	 00000259 _TEXT	Length= 000000A4 Public STDCALL
   count  . . . . . . . . . . . .	DWord	 bp - 00000004
   isNeg  . . . . . . . . . . . .	Byte	 bp - 00000005
-  _CheckNegative . . . . . . . .	L Near	 00000274 _TEXT	
-  _SetRegs . . . . . . . . . . .	L Near	 0000027F _TEXT	
-  _NextDigit . . . . . . . . . .	L Near	 00000294 _TEXT	
-  _Reverse . . . . . . . . . . .	L Near	 000002C0 _TEXT	
-  _NextElement . . . . . . . . .	L Near	 000002CD _TEXT	
+  _CheckNegative . . . . . . . .	L Near	 00000278 _TEXT	
+  _SetRegs . . . . . . . . . . .	L Near	 00000283 _TEXT	
+  _NextDigit . . . . . . . . . .	L Near	 00000298 _TEXT	
+  _Reverse . . . . . . . . . . .	L Near	 000002C4 _TEXT	
+  _NextElement . . . . . . . . .	L Near	 000002D1 _TEXT	
 wsprintfA  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 
 

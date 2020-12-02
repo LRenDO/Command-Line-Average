@@ -130,7 +130,7 @@ outputList		SDWORD	ARRAYLEN DUP (0)			;inputs as signed numbers
 typeSize		DWORD	TYPE outputList
 inputLen		DWORD	?
 sum				SDWORD	0
-average			DWORD	0
+average			SDWORD	0
 isValid			DWORD	0
 signedNum		SDWORD	?
 
@@ -541,6 +541,7 @@ writeVal PROC
 	MOV		EDX, [EBP+8]					;DWORD
 	CMP		EDX, [EBP+24]					;SDWMIN
 	JNE		_CheckNegative
+	MOV		isNeg, 1
 	MOV		EDX, [EBP+28]					;SDWMAX
 
 _CheckNegative:
@@ -587,7 +588,7 @@ _NextDigit:
 	MOV		EDX, [EBP+8]					;DWORD
 	CMP		EDX, [EBP+24]					;SDWMIN
 	JNE		_Reverse
-	MOV		EDI, [EBP+20]
+	MOV		EDI, [EBP+20]					;tempStr
 	INC		BYTE PTR [EDI] 					;SDWMAX
 	
 _Reverse:
@@ -631,13 +632,13 @@ writeVal ENDP
 ; ---------------------------------------------------------------------------------
 ; Name: displayList
 ;
-; Prints a DWORD array to the console with one space between elements.
+; Prints a DWORD array to the console with one space and comma between elements.
 ;
 ; Preconditions: 5 parameters pushed to the stack in the order listed below in 
 ;				Receives section.
 ;		
 ;
-; Postconditions: Uses EAX, EBX, ECX, EDX, EBP, ESI but preserves and restores 
+; Postconditions: Uses ECX, EBP, ESI but preserves and restores 
 ;				all of them.
 ;
 ; Receives:
@@ -736,12 +737,12 @@ calcAverage PROC
 	MOV		EDI, [EBP+20]					;address of average
 
 	; Divide Number of Elements
-	CDQ		
-	MOV		EAX, [ESI]						;sum 
-	MOV		EBX, [EBP+8]					;ARRAYLEN (elements in array)
-	IDIV	EBX
-	MOV		[EDI], EAX						;address of average 
-	
+	FINIT
+	FILD	SDWORD PTR [ESI]
+	FILD	SDWORD PTR [EBP+8]
+	FDIV
+	FISTP	SDWORD PTR [EDI]
+
 	; Restore Registers and Return
 	POP		ESI
 	POP		EDI
@@ -760,7 +761,7 @@ calcAverage ENDP
 ;			
 ;		
 ;
-; Postconditions: Uses registers but restores them (EBP, EAX, EBX, ECX, EDI, ESI). 
+; Postconditions: Uses registers but restores them (EBP, ECX, EDI, ESI). 
 ;
 ; Receives:
 ;		Stack Parameters: 
@@ -776,15 +777,12 @@ calcSum PROC
 	; Preserve Registers
 	PUSH	EBP
 	MOV		EBP, ESP
-	PUSH	EAX
-	PUSH	EBX
 	PUSH	ECX
 	PUSH	EDI
 	PUSH	ESI
 
 
 	; Set Registers to Traverse Array
-	XOR		EBX, EBX
 	MOV		ECX, [EBP+8]					;ARRAYLEN (elements in array)
 	MOV		ESI, [EBP+12]					;address of outputLlist
 	MOV		EDI, [EBP+16]					;address of sum
@@ -799,19 +797,15 @@ _NextElement:
 	FILD	SDWORD PTR [ESI]
 	FADD
 	ADD		ESI, [EBP+20]					;typeSize
-	;ADD		EBX, EAX
 	LOOP	_NextElement
 	
 	; Store in sum
 	FISTP	SDWORD PTR [EDI]
-	;MOV		[EDI], EBX								
 
 	; Restore registers and Return
 	POP		ESI
 	POP		EDI
 	POP		ECX
-	POP		EBX
-	POP		EAX
 	POP		EBP
 	RET		16
 calcSum ENDP
