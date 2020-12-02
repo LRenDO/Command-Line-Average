@@ -1,4 +1,4 @@
-TITLE Project Template        (template.asm)
+TITLE Stringing Signs and Signing Strings (Proj6_demeisol.asm)
 
 ; Author: Ren Demeis-Ortiz
 ; Last Modified: 11.3.20
@@ -6,39 +6,38 @@ TITLE Project Template        (template.asm)
 ; Course Number: CS271 Sec 400
 ; Project Number: 6          
 ; Due Date: 12.6.20
-; Description: Prompts user to enter 10 signed dword integers. 
-;		validates input and stores all values in an array. Calculates average.
-;		Finally it prints the integers, sum and average.
-;		Requires Irvine Library.
-
-;_____________________ADD DESCRIPTIONS Above and below change starting outputlist variable to 0
-
+; Description: Prompts user to enter 10 signed dword integers. Receives input as 
+;		a string. Validates input to make sure it is valid dword and stores all 
+;		valid values in an array. Calculates sum and average. Finally it prints 
+;		the integers entered, sum and average by converting the signed number 
+;		back to a string before displaying it. Total sum must be a valid signed
+;		32 bit integer. Requires Irvine Library.
 
 INCLUDE Irvine32.inc
 
-; ---------------------------------------------------------------------------------
+; ------------------------------------------------------------------------------
 ; Name: mGetString
 ;
 ; Displays a prompt and receives string input from user.
 ;
-; Preconditions: Pass string address for prompt and location for user input to be
-;		stored by reference. Uses ReadString and WriteString from Irvine Library and
-;		mDisplayString MACRO.
+; Preconditions: Pass string address for prompt and location for user input to 
+;		be stored by reference. Uses ReadString and WriteString from Irvine 
+;		Library and mDisplayString MACRO.
 ;
-; Postconditions: User input is stored at second parameter. Registers are preserved 
-;		and restored (EDX, ECX, EAX). 
+; Postconditions: User input is stored at second parameter. Registers are  
+;		preserved and restored (EDX, ECX, EAX). 
 ;
 ; Receives: 
 ;		prompt (by reference) = address of prompt
 ;		buffSize = size of buffer for user input
 ;		input (by reference) =Address for storing user entered input 
-;		charEntered (by reference) = Address for storing total characters entered
+;		charEntered (by reference) = Address for total characters entered
 ;
 ; Returns: 
 ;		input = User input
 ;		charEntered = Total Characters Entered by User
 ;		
-; ---------------------------------------------------------------------------------
+; ------------------------------------------------------------------------------
 mGetString MACRO strAddress:REQ, buffSize:REQ, input:REQ, charEntered:REQ
 	; Preserve Registers
 	PUSH	EDX
@@ -63,7 +62,7 @@ mGetString MACRO strAddress:REQ, buffSize:REQ, input:REQ, charEntered:REQ
 	POP		EDX
 ENDM
 
-; ---------------------------------------------------------------------------------
+; ------------------------------------------------------------------------------
 ; Name: mDisplayString
 ;
 ; Prints to console string at address passed as parameter
@@ -78,7 +77,7 @@ ENDM
 ;
 ; Returns: None. Displays string.
 ;		
-; ---------------------------------------------------------------------------------
+; ------------------------------------------------------------------------------
 mDisplayString MACRO strAddr:REQ
 	; Preserve Register
 	PUSH	EDX
@@ -99,7 +98,8 @@ SDWMAX = 2147483647
 
 .data
 ; Message and Title Variables
-intro1			BYTE	"... By Ren Demeis-Ortiz",13,10,13,10,0
+intro1			BYTE	"Stringing Signs and Signing Strings "
+				BYTE	"By Ren Demeis-Ortiz",13,10,13,10,0
 intro2			BYTE	"Functionality",13,10
 				BYTE	"...",13,10
 				BYTE	"...",13,10
@@ -109,24 +109,26 @@ intro2			BYTE	"Functionality",13,10
 				BYTE	"...",13,10
 				BYTE	"...",13,10
 				BYTE	13,10,0
-error			BYTE	"Woops! That wasn't a valid input. Let's try again",13,10,0
+error			BYTE	13,10,"Woops! That wasn't a valid input. Let's try "
+				BYTE	"again.",13,10,0
 prompt1			BYTE	13,10,"Enter a signed number between -2,147,483,648 " 
-				BYTE	"and +2,147,483,647: ",13,10,0
+				BYTE	"and +2,147,483,647: ",0
 listTitle		BYTE	13,10,"You Entered:",13,10,0
-sumTitle		BYTE	"Sum: ",0
-avgTitle		BYTE	"Average (rounded down to nearest integer): ",0
-farewell		BYTE	"..., have a great day!",13,10,13,10,0
+spacer			BYTE	", ",0
+sumTitle		BYTE	13,10,13,10,"Sum: ",0
+avgTitle		BYTE	13,10,"Average (rounded down to nearest integer): ",0
+farewell		BYTE	13,10,13,10,"Thanks for stopping by. Have a great day!"
+				BYTE	13,10,13,10,0
 
 ; Array and Calculation Variables
-tempStr			BYTE	12 DUP(0)
-processedStr	BYTE	12 DUP(0)
+tempStr			BYTE	12 DUP(0)					;string in reverse
+processedStr	BYTE	12 DUP(0)					;string to be displayed
 pStringLen		DWORD	LENGTHOF processedStr
-userInput		BYTE	BUFFERSIZE DUP (0)
+userInput		BYTE	BUFFERSIZE DUP (0)			;string inputted by user
 userInputSize	DWORD	SIZEOF userInput
-outputList		SDWORD	ARRAYLEN DUP (2)
+outputList		SDWORD	ARRAYLEN DUP (0)			;inputs as signed numbers
 typeSize		DWORD	TYPE outputList
 inputLen		DWORD	?
-elemPerLine		DWORD	10
 sum				SDWORD	0
 average			DWORD	0
 isValid			DWORD	0
@@ -139,11 +141,6 @@ main PROC
 	PUSH	OFFSET intro1
 	PUSH	OFFSET intro2
 	CALL	introduction	
-
-
-;___	mGetString OFFSET prompt1, userInputSize, OFFSET userInput, inputLen
-
-	mDisplayString OFFSET userInput
 
 	; Get 10 Valid Integers from User
 	PUSH	ARRAYLEN
@@ -160,19 +157,19 @@ main PROC
 	CALL	getUserInputs
 
 	; Display userInput Array
+	PUSH	OFFSET spacer
 	PUSH	SDWMAX
 	PUSH	SDWMIN
 	PUSH	OFFSET tempStr
 	PUSH	pStringLen
 	PUSH	OFFSET processedStr
-	PUSH	elemPerLine
-	PUSH	typeSize
 	PUSH	ARRAYLEN
 	PUSH	OFFSET listTitle
 	PUSH	OFFSET outputList
 	CALL	displayList
 
 	; Calculate Average and Sum
+	PUSH	typeSize
 	PUSH	OFFSET average
 	PUSH	OFFSET sum
 	PUSH	OFFSET outputList
@@ -180,6 +177,7 @@ main PROC
 	CALL	calcAverage
 
 	; Display Sum 
+	mdisplayString	OFFSET sumTitle
 	PUSH	SDWMAX
 	PUSH	SDWMIN
 	PUSH	OFFSET tempStr
@@ -189,6 +187,7 @@ main PROC
 	CALL	WriteVal
 
 	; Display Average
+	mdisplayString	OFFSET avgTitle
 	PUSH	SDWMAX
 	PUSH	SDWMIN
 	PUSH	OFFSET tempStr
@@ -230,9 +229,9 @@ introduction PROC
 	PUSH	EBP
 	MOV		EBP, ESP
 
-	mDisplayString [EBP+12]						;address of intro1
+	mDisplayString [EBP+12]					;address of intro1
 
-	mDisplayString [EBP+8]						;address of intro2
+	mDisplayString [EBP+8]					;address of intro2
 
 	POP		EBP
 	RET		8
@@ -249,7 +248,7 @@ introduction ENDP
 ;			Requires mGetString MACRO and ReadVal PROC.
 ;		
 ;
-; Postconditions: Uses registers but restores them (). 
+; Postconditions: Uses registers but restores them (EBP, ECX, EDI, ESI). 
 ;
 ; Receives:
 ;		Stack Parameters: 
@@ -273,46 +272,40 @@ getUserInputs PROC
 	; Preserve Registers
 	PUSH	EBP
 	MOV		EBP, ESP
-	PUSH	EAX
-	PUSH	EBX
 	PUSH	ECX
-	PUSH	EDX
 	PUSH	EDI
 	PUSH	ESI
 
 	; Set Registers
-	MOV		ECX, [EBP+48]				;ARRAYLEN
-	MOV		EDI, [EBP+44]				;OutputList
+	MOV		ECX, [EBP+48]					;ARRAYLEN
+	MOV		EDI, [EBP+44]					;outputList
 
 _NextElement:
 	; Get User Input
-	PUSH	[EBP+40]					;address of error
-	PUSH	[EBP+36]					;address of inputLen
-	PUSH	[EBP+32]					;SDWMIN
-	PUSH	[EBP+28]					;SDWMAX
-	PUSH	[EBP+24]					;address of prompt1
-	PUSH	[EBP+20]					;userInputSize
-	PUSH	[EBP+16]					;address of userInput
-	PUSH	[EBP+12]					;address of signedNum
-	PUSH	[EBP+8]						;address of isValid
+	PUSH	[EBP+40]						;address of error
+	PUSH	[EBP+36]						;address of inputLen
+	PUSH	[EBP+32]						;SDWMIN
+	PUSH	[EBP+28]						;SDWMAX
+	PUSH	[EBP+24]						;address of prompt1
+	PUSH	[EBP+20]						;userInputSize
+	PUSH	[EBP+16]						;address of userInput
+	PUSH	[EBP+12]						;address of signedNum
+	PUSH	[EBP+8]							;address of isValid
 	CALL	readVal
 
 	; If Valid, Store Input in Array and Increment Counter
-	MOV		ESI, [EBP+8]				;isValid
+	MOV		ESI, [EBP+8]					;isValid
 	CMP		BYTE PTR [ESI], 1				
 	MOV		BYTE PTR [ESI], 0
 	JNE		_NextElement
-	MOV		ESI, [EBP+12]				;signedNum
+	MOV		ESI, [EBP+12]					;signedNum
 	MOVSD	
 	LOOP	_NextElement
 
 	; Restore Registers and Return
 	POP		ESI
 	POP		EDI
-	POP		EDX
 	POP		ECX
-	POP		EBX
-	POP		EAX
 	POP		EBP
 	RET		44
 
@@ -380,7 +373,7 @@ readVal PROC
 	; Checks Length of Input
 	;---------------------------------------
 	; Set Registers
-	MOV		EDI, [EBP+36]				;inputLen
+	MOV		EDI, [EBP+36]					;inputLen
 	MOV		ECX, [EDI]
 	XOR		EAX, EAX
 
@@ -444,21 +437,6 @@ _IsDigitLoop:
 	INC		ESI
 	DEC		ECX
 
-COMMENT !
-;___ FPU for this???
-	FINIT
-_Convert:
-	; Convert from ASCII to Signed Digit. 
-	; result = 10*result+(n-48) = 10 result * n 48 - +
-	XOR		EAX, EAX
-	LODSB
-	FILD	EAX
-	FILD	EBX
-	FMUL
-
-
-	LOOP	_Convert
-!
 
 _Convert:
 	; Convert from ASCII to Signed Digit. result = 10*result+(n-48)
@@ -486,7 +464,7 @@ _Continue:
 	NEG		EAX
 
 	; If Minimum Value, Store and Return
-	CMP		EAX, [EBP+32]				;SDMIN
+	CMP		EAX, [EBP+32]					;SDMIN
 	JE		_StoreResult
 
 _CheckRange:
@@ -552,6 +530,7 @@ writeVal PROC
 	LOCAL	count:DWORD, isNeg:BYTE
 	PUSH	EAX
 	PUSH	EBX
+	PUSH	ECX
 	PUSH	EDX
 	PUSH	EDI
 	PUSH	ESI
@@ -613,10 +592,10 @@ _NextDigit:
 	
 _Reverse:
 	; Set Registers for Reversal
-	MOV		EDI, [EBP+12]						;address of processedStr
-	MOV		ESI, [EBP+20]						;address of tempStr
+	MOV		EDI, [EBP+12]					;address of processedStr
+	MOV		ESI, [EBP+20]					;address of tempStr
 	ADD		ESI, count		
-	DEC		ESI									;last element
+	DEC		ESI								;last element
 	MOV		ECX, count
 	
 	; Reverse String from Source to Destination
@@ -642,6 +621,7 @@ _NextElement:
 	POP		ESI
 	POP		EDI
 	POP		EDX
+	POP		ECX
 	POP		EBX
 	POP		EAX
 	RET		24
@@ -662,11 +642,15 @@ writeVal ENDP
 ;
 ; Receives:
 ;		Stack Parameters: 
-;				elemPerLine = number of elements to be displayed per line
-;				typeSize = size of the type
-;				ARRAYLEN = number of elements in array
-;				listTitle (by reference) = string title to be displayed before array
-;				outputList (by reference) = array to be displayed
+;			spacer (by reference) = comma and space between elements
+;			SDWMAX = maximum 32 bit signed integer
+;			SDWMIN = minimum 32 bit signed integer
+;			tempStr (by reference) = used to process value
+;			pStringLen = length of processedStr
+;			processedStr (by reference) = address to store string output
+;			ARRAYLEN = number of elements in array
+;			listTitle (by reference) = string title to be displayed before array
+;			outputList (by reference) = array to be displayed
 ;
 ; Returns: 
 ;		None. Displays array.
@@ -675,55 +659,42 @@ displayList PROC
 	; Preserve Registers
 	PUSH	EBP
 	MOV		EBP, ESP
-	PUSH	EDX
 	PUSH	ECX
-	PUSH	EBX
-	PUSH	EAX
 	PUSH	ESI
 
-	MOV		ESI, [EBP+8]					; address of array
-	
-	mDisplayString [EBP+12]					; address of title
+	; Set Registers
+	MOV		ESI, [EBP+8]					;address of array
+	MOV		ECX, [EBP+16]					;length of array
 
-	MOV		ECX, [EBP+16]					; length of array
+	; Display Title
+	mDisplayString [EBP+12]					;address of title
+
 	
 	; Display Array
 _Display:
-	MOV		EAX, [ESI]
-	CALL	WriteDec
-	MOV		AL, ' '
-	CALL	WriteChar
-	ADD		ESI, [EBP+20]					; element type size
-	
-	; If not nth number skip to the end, else go to next line 
-	; (nth element = Length of array-count+1/n = remainder 0)
-	MOV		EAX, [EBP+16]					; length of array
-	SUB		EAX, ECX
-	ADD		EAX, 1
-	MOV		EBX, [EBP+24]					; number of elements per line
-	CDQ
-	DIV		EBX
-	CMP		EDX, 0
-	JNE		_SkipNewLine
-	CALL	CrLf
-
-_SkipNewLine:
+	LODSD
+	PUSH	[EBP+36]						;SDWMAX
+	PUSH	[EBP+32]						;SDWMIN
+	PUSH	[EBP+28]						;address of tempStr
+	PUSH	[EBP+24]						;pStringLen
+	PUSH	[EBP+20]						;address of processedStr
+	PUSH	EAX								;element
+	CALL	writeVal				
+	CMP		ECX, 1
+	JE		_Return
+	mDisplayString	[EBP+40]				;spacer
 	LOOP	_Display
 
-	CALL	CrLf
-
+_Return:
 	;Restore Registers and Return
 	POP		ESI
-	POP		EAX
-	POP		EBX
 	POP		ECX
-	POP		EDX
 	POP		EBP
-	RET		20
+	RET		36
 displayList	ENDP
 
 ; ---------------------------------------------------------------------------------
-; Name: average
+; Name: calcAverage
 ;
 ; Calculates average of an array passed rounded down to the nearest integer.
 ;
@@ -735,6 +706,7 @@ displayList	ENDP
 ;
 ; Receives:
 ;		Stack Parameters: 
+;				typeSize = size of elements
 ;				average (by reference) = address of average
 ;				sum (by reference) = address of sum
 ;				outputList (by reference) = address of outputList
@@ -753,6 +725,7 @@ calcAverage PROC
 	PUSH	ESI
 
 	; Calculate Sum
+	PUSH	[EBP+24]
 	PUSH	[EBP+16]						;address of sum 
 	PUSH	[EBP+12]						;address of outputList
 	PUSH	[EBP+8]							;ARRAYLEN (elements in array)
@@ -775,7 +748,7 @@ calcAverage PROC
 	POP		EBX
 	POP		EAX
 	POP		EBP
-	RET		16
+	RET		20
 calcAverage ENDP
 
 ; ---------------------------------------------------------------------------------
@@ -791,6 +764,7 @@ calcAverage ENDP
 ;
 ; Receives:
 ;		Stack Parameters: 
+;				typeSize = size of element 
 ;				sum (by reference) = address of sum
 ;				outputList (by reference) = address of outputList
 ;				ARRAYLEN = number of elements in array
@@ -815,14 +789,22 @@ calcSum PROC
 	MOV		ESI, [EBP+12]					;address of outputLlist
 	MOV		EDI, [EBP+16]					;address of sum
 
+	FINIT
+	FILD	SDWORD PTR [ESI]
+	ADD		ESI, [EBP+20]					;typeSize
+	DEC		ECX
+
 _NextElement:
 	; Add Elements in outputList
-	LODSD
-	ADD		EBX, EAX
+	FILD	SDWORD PTR [ESI]
+	FADD
+	ADD		ESI, [EBP+20]					;typeSize
+	;ADD		EBX, EAX
 	LOOP	_NextElement
 	
 	; Store in sum
-	MOV		[EDI], EBX								
+	FISTP	SDWORD PTR [EDI]
+	;MOV		[EDI], EBX								
 
 	; Restore registers and Return
 	POP		ESI
@@ -831,7 +813,7 @@ _NextElement:
 	POP		EBX
 	POP		EAX
 	POP		EBP
-	RET		12
+	RET		16
 calcSum ENDP
 
 ; ---------------------------------------------------------------------------------
