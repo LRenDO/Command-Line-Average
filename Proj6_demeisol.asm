@@ -146,6 +146,8 @@ main PROC
 	mDisplayString OFFSET userInput
 
 	; Get 10 Valid Integers from User
+	PUSH	ARRAYLEN
+	PUSH	OFFSET OutputList
 	PUSH	OFFSET error
 	PUSH	OFFSET inputLen
 	PUSH	SDWMIN
@@ -155,9 +157,14 @@ main PROC
 	PUSH	OFFSET userInput
 	PUSH	OFFSET signedNum
 	PUSH	OFFSET isValid
-	CALL	readVal
+	CALL	getUserInputs
 
 	; Display userInput Array
+	PUSH	SDWMAX
+	PUSH	SDWMIN
+	PUSH	OFFSET tempStr
+	PUSH	pStringLen
+	PUSH	OFFSET processedStr
 	PUSH	elemPerLine
 	PUSH	typeSize
 	PUSH	ARRAYLEN
@@ -246,17 +253,70 @@ introduction ENDP
 ;
 ; Receives:
 ;		Stack Parameters: 
+;			ARRAYLEN = number of outputList elements
+;			outputList (by reference) = address to store signed numbers
+;			error (by reference) = address of error message
+;			inputLen (by reference) = address for number of characters inputted
+;			SDWMIN = lowest signed 32 bit integer value
+;			SDWMAX = greatest signed 32 bit integer value
 ;			prompt1	(by reference) = address of prompt for user to enter number
 ;			userInputSize = buffer size for input
 ;			userInput (by reference) = address for string user inputs
-;			inputLen = address to store the number of characters inputted
-;			signedNum (by reference) = address to store outputed SDWORD
+;			signedNum (by reference) = address to store outputted SDWORD
+;			isValid (by reference) = address to store if number is written or not
 ;
 ; Returns: 
-;		signedNum (by reference) = address to store outputed SDWORD
+;		outputList (by reference) = address to store outputed SDWORD
 ;		
 ; ---------------------------------------------------------------------------------
+getUserInputs PROC
+	; Preserve Registers
+	PUSH	EBP
+	MOV		EBP, ESP
+	PUSH	EAX
+	PUSH	EBX
+	PUSH	ECX
+	PUSH	EDX
+	PUSH	EDI
+	PUSH	ESI
 
+	; Set Registers
+	MOV		ECX, [EBP+48]				;ARRAYLEN
+	MOV		EDI, [EBP+44]				;OutputList
+
+_NextElement:
+	; Get User Input
+	PUSH	[EBP+40]					;address of error
+	PUSH	[EBP+36]					;address of inputLen
+	PUSH	[EBP+32]					;SDWMIN
+	PUSH	[EBP+28]					;SDWMAX
+	PUSH	[EBP+24]					;address of prompt1
+	PUSH	[EBP+20]					;userInputSize
+	PUSH	[EBP+16]					;address of userInput
+	PUSH	[EBP+12]					;address of signedNum
+	PUSH	[EBP+8]						;address of isValid
+	CALL	readVal
+
+	; If Valid, Store Input in Array and Increment Counter
+	MOV		ESI, [EBP+8]				;isValid
+	CMP		BYTE PTR [ESI], 1				
+	MOV		BYTE PTR [ESI], 0
+	JNE		_NextElement
+	MOV		ESI, [EBP+12]				;signedNum
+	MOVSD	
+	LOOP	_NextElement
+
+	; Restore Registers and Return
+	POP		ESI
+	POP		EDI
+	POP		EDX
+	POP		ECX
+	POP		EBX
+	POP		EAX
+	POP		EBP
+	RET		44
+
+getUserInputs ENDP
 
 ; ---------------------------------------------------------------------------------
 ; Name: readVal
@@ -299,6 +359,13 @@ readVal PROC
 	PUSH	EDI
 	PUSH	ESI
 
+	; Set Registers and Local Variables
+	MOV		ESI, [EBP+16]					;userInput
+	MOV		hasSign, 0
+	MOV		isNeg, 0
+	MOV		isPos, 0
+	MOV		oFlag, 0
+
 	; Get Input from User  params: (prompt1, userInputSize, userInput, inputLen)
 	mGetString	[EBP+24], [EBP+20], [EBP+16], [EBP+36] 									
 	
@@ -312,12 +379,7 @@ readVal PROC
 	;---------------------------------------
 	; Checks Length of Input
 	;---------------------------------------
-	; Set Registers and Local Variables
-	MOV		ESI, [EBP+16]					;userInput
-	MOV		hasSign, 0
-	MOV		isNeg, 0
-	MOV		isPos, 0
-	MOV		oFlag, 0
+	; Set Registers
 	MOV		EDI, [EBP+36]				;inputLen
 	MOV		ECX, [EDI]
 	XOR		EAX, EAX
@@ -487,12 +549,14 @@ readVal ENDP
 ; ---------------------------------------------------------------------------------
 writeVal PROC
 	; Preserve Registers
-	LOCAL	count:DWORD
+	LOCAL	count:DWORD, isNeg:BYTE
 	PUSH	EAX
 	PUSH	EBX
 	PUSH	EDX
 	PUSH	EDI
 	PUSH	ESI
+
+	MOV		isNeg, 0
 
 	; If Min Signed DWORD Value, Set Absolute Value
 	MOV		EDX, [EBP+8]					;DWORD
@@ -505,6 +569,7 @@ _CheckNegative:
 	CMP		EDX, 0	
 	JGE		_SetRegs
 	NEG		EDX
+	MOV		isNeg, 1
 
 _SetRegs:
 	; Set Registers
@@ -533,9 +598,8 @@ _NextDigit:
 	JNE		_NextDigit
 
 	; If Negative, Add Sign
-	MOV		EDX, [EBP+8]						;DWORD
-	CMP		EDX, 0								
-	JGE		_Reverse
+	CMP		isNeg, 1								
+	JNE		_Reverse
 	MOV		AL, '-'
 	INC		count
 	STOSB
