@@ -1,4 +1,7 @@
 # Command Line Average
+Computer Architecture and Assembly Language Project
+
+## Description
 Prompts user to enter 10 signed dword integers. Receives input as 
 a string. Validates input to make sure it is valid dword and stores all 
 valid values in an array. Calculates sum and average. Finally it prints 
