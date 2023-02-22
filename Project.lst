@@ -1,11 +1,11 @@
-Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 14:16:58
+Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/03/20 14:01:45
 8Stringing Signs and Signing Strings (Proj6_demeisol.asm     Page 1 - 1
 
 
 				TITLE Stringing Signs and Signing Strings (Proj6_demeisol.asm)
 
 				; Author: Ren Demeis-Ortiz
-				; Last Modified: 11.3.20
+				; Last Modified: 12.2.20
 				; OSU Email: demeisol@oregonstate.edu
 				; Course Number: CS271 Sec 400
 				; Project Number: 6          
@@ -14,8 +14,9 @@ Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 14:16:58
 				;		a string. Validates input to make sure it is valid dword and stores all 
 				;		valid values in an array. Calculates sum and average. Finally it prints 
 				;		the integers entered, sum and average by converting the signed number 
-				;		back to a string before displaying it. Total sum must be a valid signed
-				;		32 bit integer. Requires Irvine Library.
+				;		back to a string before displaying it. Total sum assumed to be a valid 
+				;		signed 32 bit integer for calculations to be correct per instructions. 
+				;		Requires Irvine Library.
 
 				INCLUDE Irvine32.inc
 			      C ; Include file for Irvine32.lib             (Irvine32.inc)
@@ -132,18 +133,109 @@ Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 14:16:58
 	   65 69 73 2D 4F
 	   72 74 69 7A 0D
 	   0A 0D 0A 00
- 0000003C 46 75 6E 63 74	intro2			BYTE	"Functionality",13,10
-	   69 6F 6E 61 6C
-	   69 74 79 0D 0A
- 0000004B  2E 2E 2E 0D 0A					BYTE	"...",13,10
- 00000050  2E 2E 2E 0D 0A					BYTE	"...",13,10
- 00000055  2E 2E 2E 0D 0A					BYTE	"...",13,10
- 0000005A  2E 2E 2E 0D 0A					BYTE	"...",13,10
- 0000005F  2E 2E 2E 0D 0A					BYTE	"...",13,10
- 00000064  2E 2E 2E 0D 0A					BYTE	"...",13,10
- 00000069  2E 2E 2E 0D 0A					BYTE	"...",13,10
- 0000006E  0D 0A 00						BYTE	13,10,0
- 00000071 0D 0A 57 6F 6F	error			BYTE	13,10,"Woops! That wasn't a valid input. Let's try "
+ 0000003C 54 68 69 73 20	intro2			BYTE	"This program will take 10 signed decimal integers and "
+	   70 72 6F 67 72
+	   61 6D 20 77 69
+	   6C 6C 20 74 61
+	   6B 65 20 31 30
+	   20 73 69 67 6E
+	   65 64 20 64 65
+	   63 69 6D 61 6C
+	   20 69 6E 74 65
+	   67 65 72 73 20
+	   61 6E 64 20
+ 00000072  63 61 6C 63 75					BYTE	"calculate the sum and average of those integers.",13,10
+	   6C 61 74 65 20
+	   74 68 65 20 73
+	   75 6D 20 61 6E
+	   64 20 61 76 65
+	   72 61 67 65 20
+	   6F 66 20 74 68
+	   6F 73 65 20 69
+	   6E 74 65 67 65
+	   72 73 2E 0D 0A
+ 000000A4  45 61 63 68 20					BYTE	"Each number must be between -2,147,483,648 and " 
+	   6E 75 6D 62 65
+	   72 20 6D 75 73
+	   74 20 62 65 20
+	   62 65 74 77 65
+	   65 6E 20 2D 32
+	   2C 31 34 37 2C
+	   34 38 33 2C 36
+	   34 38 20 61 6E
+	   64 20
+ 000000D3  2B 32 2C 31 34					BYTE	"+2,147,483,647 and may only contain digits.",13,10
+	   37 2C 34 38 33
+	   2C 36 34 37 20
+	   61 6E 64 20 6D
+	   61 79 20 6F 6E
+	   6C 79 20 63 6F
+	   6E 74 61 69 6E
+	   20 64 69 67 69
+	   74 73 2E 0D 0A
+ 00000100  54 68 65 20 66					BYTE	"The first character, however, can be a postive or "
+	   69 72 73 74 20
+	   63 68 61 72 61
+	   63 74 65 72 2C
+	   20 68 6F 77 65
+	   76 65 72 2C 20
+	   63 61 6E 20 62
+	   65 20 61 20 70
+	   6F 73 74 69 76
+	   65 20 6F 72 20
+ 00000132  6E 65 67 61 74					BYTE	"negative sign.  The numbers you enter will",13,10
+	   69 76 65 20 73
+	   69 67 6E 2E 20
+	   20 54 68 65 20
+	   6E 75 6D 62 65
+	   72 73 20 79 6F
+	   75 20 65 6E 74
+	   65 72 20 77 69
+	   6C 6C 0D 0A
+ 0000015E  62 65 20 64 69					BYTE	"be displayed and then the sum and the rounded down "
+	   73 70 6C 61 79
+	   65 64 20 61 6E
+	   64 20 74 68 65
+	   6E 20 74 68 65
+	   20 73 75 6D 20
+	   61 6E 64 20 74
+	   68 65 20 72 6F
+	   75 6E 64 65 64
+	   20 64 6F 77 6E
+	   20
+ 00000191  61 76 65 72 61					BYTE	"average of the numbers entered. The sum",13,10
+	   67 65 20 6F 66
+	   20 74 68 65 20
+	   6E 75 6D 62 65
+	   72 73 20 65 6E
+	   74 65 72 65 64
+	   2E 20 54 68 65
+	   20 73 75 6D 0D
+	   0A
+ 000001BA  6D 75 73 74 20					BYTE	"must be a 32 bit signed integer for a correct summation."
+	   62 65 20 61 20
+	   33 32 20 62 69
+	   74 20 73 69 67
+	   6E 65 64 20 69
+	   6E 74 65 67 65
+	   72 20 66 6F 72
+	   20 61 20 63 6F
+	   72 72 65 63 74
+	   20 73 75 6D 6D
+	   61 74 69 6F 6E
+	   2E
+ 000001F2  0D 0A 0D 0A 59					BYTE	13,10,13,10,"You can begin entering your numbers below."
+	   6F 75 20 63 61
+	   6E 20 62 65 67
+	   69 6E 20 65 6E
+	   74 65 72 69 6E
+	   67 20 79 6F 75
+	   72 20 6E 75 6D
+	   62 65 72 73 20
+	   62 65 6C 6F 77
+	   2E
+ 00000220  0D 0A 0D 0A 00					BYTE	13,10,13,10,0
+ 00000225 0D 0A 57 6F 6F	error			BYTE	13,10,"Woops! That wasn't a valid input. Let's try "
 	   70 73 21 20 54
 	   68 61 74 20 77
 	   61 73 6E 27 74
@@ -153,31 +245,23 @@ Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 14:16:58
 	   20 4C 65 74 27
 	   73 20 74 72 79
 	   20
- 0000009F  61 67 61 69 6E					BYTE	"again.",13,10,0
+ 00000253  61 67 61 69 6E					BYTE	"again.",13,10,0
 	   2E 0D 0A 00
- 000000A8 0D 0A 45 6E 74	prompt1			BYTE	13,10,"Enter a signed number between -2,147,483,648 " 
+ 0000025C 0D 0A 45 6E 74	prompt1			BYTE	13,10,"Enter a 32 bit signed integer: ",0
 	   65 72 20 61 20
-	   73 69 67 6E 65
-	   64 20 6E 75 6D
-	   62 65 72 20 62
-	   65 74 77 65 65
-	   6E 20 2D 32 2C
-	   31 34 37 2C 34
-	   38 33 2C 36 34
-	   38 20
- 000000D7  61 6E 64 20 2B					BYTE	"and +2,147,483,647: ",0
-	   32 2C 31 34 37
-	   2C 34 38 33 2C
-	   36 34 37 3A 20
-	   00
- 000000EC 0D 0A 59 6F 75	listTitle		BYTE	13,10,"You Entered:",13,10,0
+	   33 32 20 62 69
+	   74 20 73 69 67
+	   6E 65 64 20 69
+	   6E 74 65 67 65
+	   72 3A 20 00
+ 0000027E 0D 0A 59 6F 75	listTitle		BYTE	13,10,"You Entered:",13,10,0
 	   20 45 6E 74 65
 	   72 65 64 3A 0D
 	   0A 00
- 000000FD 2C 20 00		spacer			BYTE	", ",0
- 00000100 0D 0A 0D 0A 53	sumTitle		BYTE	13,10,13,10,"Sum: ",0
+ 0000028F 2C 20 00		spacer			BYTE	", ",0
+ 00000292 0D 0A 0D 0A 53	sumTitle		BYTE	13,10,13,10,"Sum: ",0
 	   75 6D 3A 20 00
- 0000010A 0D 0A 41 76 65	avgTitle		BYTE	13,10,"Average (rounded down to nearest integer): ",0
+ 0000029C 0D 0A 41 76 65	avgTitle		BYTE	13,10,"Average (rounded down to nearest integer): ",0
 	   72 61 67 65 20
 	   28 72 6F 75 6E
 	   64 65 64 20 64
@@ -187,7 +271,7 @@ Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 14:16:58
 	   69 6E 74 65 67
 	   65 72 29 3A 20
 	   00
- 00000138 0D 0A 0D 0A 54	farewell		BYTE	13,10,13,10,"Thanks for stopping by. Have a great day!"
+ 000002CA 0D 0A 0D 0A 54	farewell		BYTE	13,10,13,10,"Thanks for stopping by. Have a great day!"
 	   68 61 6E 6B 73
 	   20 66 6F 72 20
 	   73 74 6F 70 70
@@ -196,29 +280,29 @@ Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 14:16:58
 	   76 65 20 61 20
 	   67 72 65 61 74
 	   20 64 61 79 21
- 00000165  0D 0A 0D 0A 00					BYTE	13,10,13,10,0
+ 000002F7  0D 0A 0D 0A 00					BYTE	13,10,13,10,0
 
 				; Array and Calculation Variables
- 0000016A  0000000C [		tempStr			BYTE	12 DUP(0)					;string in reverse
+ 000002FC  0000000C [		tempStr			BYTE	12 DUP(0)					;string in reverse
 	    00
 	   ]
- 00000176  0000000C [		processedStr	BYTE	12 DUP(0)					;string to be displayed
+ 00000308  0000000C [		processedStr	BYTE	12 DUP(0)					;string to be displayed
 	    00
 	   ]
- 00000182 0000000C		pStringLen		DWORD	LENGTHOF processedStr
- 00000186  0000000D [		userInput		BYTE	BUFFERSIZE DUP (0)			;string inputted by user
+ 00000314 0000000C		pStringLen		DWORD	LENGTHOF processedStr
+ 00000318  0000000D [		userInput		BYTE	BUFFERSIZE DUP (0)			;string inputted by user
 	    00
 	   ]
- 00000193 0000000D		userInputSize	DWORD	SIZEOF userInput
- 00000197  0000000A [		outputList		SDWORD	ARRAYLEN DUP (0)			;inputs as signed numbers
+ 00000325 0000000D		userInputSize	DWORD	SIZEOF userInput
+ 00000329  0000000A [		outputList		SDWORD	ARRAYLEN DUP (0)			;inputs as signed numbers
 	    00000000
 	   ]
- 000001BF 00000004		typeSize		DWORD	TYPE outputList
- 000001C3 00000000		inputLen		DWORD	?
- 000001C7 00000000		sum				SDWORD	0
- 000001CB 00000000		average			SDWORD	0
- 000001CF 00000000		isValid			DWORD	0
- 000001D3 00000000		signedNum		SDWORD	?
+ 00000351 00000004		typeSize		DWORD	TYPE outputList
+ 00000355 00000000		inputLen		DWORD	?
+ 00000359 00000000		sum				SDWORD	0
+ 0000035D 00000000		average			SDWORD	0
+ 00000361 00000000		isValid			DWORD	0
+ 00000365 00000000		signedNum		SDWORD	?
 
  00000000			.code
  00000000			main PROC
@@ -230,69 +314,69 @@ Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 14:16:58
 
 					; Get 10 Valid Integers from User
  0000000F  6A 0A			PUSH	ARRAYLEN
- 00000011  68 00000197 R		PUSH	OFFSET OutputList
- 00000016  68 00000071 R		PUSH	OFFSET error
- 0000001B  68 000001C3 R		PUSH	OFFSET inputLen
+ 00000011  68 00000329 R		PUSH	OFFSET OutputList
+ 00000016  68 00000225 R		PUSH	OFFSET error
+ 0000001B  68 00000355 R		PUSH	OFFSET inputLen
  00000020  68 80000000			PUSH	SDWMIN
  00000025  68 7FFFFFFF			PUSH	SDWMAX
- 0000002A  68 000000A8 R		PUSH	OFFSET prompt1
- 0000002F  FF 35 00000193 R		PUSH	userInputSize
- 00000035  68 00000186 R		PUSH	OFFSET userInput
- 0000003A  68 000001D3 R		PUSH	OFFSET signedNum
- 0000003F  68 000001CF R		PUSH	OFFSET isValid
+ 0000002A  68 0000025C R		PUSH	OFFSET prompt1
+ 0000002F  FF 35 00000325 R		PUSH	userInputSize
+ 00000035  68 00000318 R		PUSH	OFFSET userInput
+ 0000003A  68 00000365 R		PUSH	OFFSET signedNum
+ 0000003F  68 00000361 R		PUSH	OFFSET isValid
  00000044  E8 000000DA			CALL	getUserInputs
 
 					; Display userInput Array
- 00000049  68 000000FD R		PUSH	OFFSET spacer
+ 00000049  68 0000028F R		PUSH	OFFSET spacer
  0000004E  68 7FFFFFFF			PUSH	SDWMAX
  00000053  68 80000000			PUSH	SDWMIN
- 00000058  68 0000016A R		PUSH	OFFSET tempStr
- 0000005D  FF 35 00000182 R		PUSH	pStringLen
- 00000063  68 00000176 R		PUSH	OFFSET processedStr
+ 00000058  68 000002FC R		PUSH	OFFSET tempStr
+ 0000005D  FF 35 00000314 R		PUSH	pStringLen
+ 00000063  68 00000308 R		PUSH	OFFSET processedStr
  00000068  6A 0A			PUSH	ARRAYLEN
- 0000006A  68 000000EC R		PUSH	OFFSET listTitle
- 0000006F  68 00000197 R		PUSH	OFFSET outputList
+ 0000006A  68 0000027E R		PUSH	OFFSET listTitle
+ 0000006F  68 00000329 R		PUSH	OFFSET outputList
  00000074  E8 00000284			CALL	displayList
 
 					; Calculate Average and Sum
- 00000079  FF 35 000001BF R		PUSH	typeSize
- 0000007F  68 000001CB R		PUSH	OFFSET average
- 00000084  68 000001C7 R		PUSH	OFFSET sum
- 00000089  68 00000197 R		PUSH	OFFSET outputList
+ 00000079  FF 35 00000351 R		PUSH	typeSize
+ 0000007F  68 0000035D R		PUSH	OFFSET average
+ 00000084  68 00000359 R		PUSH	OFFSET sum
+ 00000089  68 00000329 R		PUSH	OFFSET outputList
  0000008E  6A 0A			PUSH	ARRAYLEN
  00000090  E8 000002AA			CALL	calcAverage
 
 					; Display Sum 
 					mdisplayString	OFFSET sumTitle
  00000095  52		     1		PUSH	EDX
- 00000096  BA 00000100 R     1		MOV		EDX, OFFSET sumTitle
+ 00000096  BA 00000292 R     1		MOV		EDX, OFFSET sumTitle
  0000009B  E8 00000000 E     1		CALL	WriteString
  000000A0  5A		     1		POP		EDX
  000000A1  68 7FFFFFFF			PUSH	SDWMAX
  000000A6  68 80000000			PUSH	SDWMIN
- 000000AB  68 0000016A R		PUSH	OFFSET tempStr
- 000000B0  FF 35 00000182 R		PUSH	pStringLen
- 000000B6  68 00000176 R		PUSH	OFFSET processedStr
- 000000BB  FF 35 000001C7 R		PUSH	sum
+ 000000AB  68 000002FC R		PUSH	OFFSET tempStr
+ 000000B0  FF 35 00000314 R		PUSH	pStringLen
+ 000000B6  68 00000308 R		PUSH	OFFSET processedStr
+ 000000BB  FF 35 00000359 R		PUSH	sum
  000000C1  E8 00000193			CALL	WriteVal
 
 					; Display Average
 					mdisplayString	OFFSET avgTitle
  000000C6  52		     1		PUSH	EDX
- 000000C7  BA 0000010A R     1		MOV		EDX, OFFSET avgTitle
+ 000000C7  BA 0000029C R     1		MOV		EDX, OFFSET avgTitle
  000000CC  E8 00000000 E     1		CALL	WriteString
  000000D1  5A		     1		POP		EDX
  000000D2  68 7FFFFFFF			PUSH	SDWMAX
  000000D7  68 80000000			PUSH	SDWMIN
- 000000DC  68 0000016A R		PUSH	OFFSET tempStr
- 000000E1  FF 35 00000182 R		PUSH	pStringLen
- 000000E7  68 00000176 R		PUSH	OFFSET processedStr
- 000000EC  FF 35 000001CB R		PUSH	average
+ 000000DC  68 000002FC R		PUSH	OFFSET tempStr
+ 000000E1  FF 35 00000314 R		PUSH	pStringLen
+ 000000E7  68 00000308 R		PUSH	OFFSET processedStr
+ 000000EC  FF 35 0000035D R		PUSH	average
  000000F2  E8 00000162			CALL	WriteVal
 
 					; Say farewell
- 000000F7  68 00000138 R		PUSH	OFFSET farewell
- 000000FC  E8 0000029A			CALL	displayFarewell
+ 000000F7  68 000002CA R		PUSH	OFFSET farewell
+ 000000FC  E8 000002AB			CALL	displayFarewell
 
 
 
@@ -866,39 +950,49 @@ Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 14:16:58
 				; ---------------------------------------------------------------------------------
  0000033F			calcAverage PROC
 					; Preserve Registers
- 0000033F  55				PUSH	EBP
- 00000340  8B EC			MOV		EBP, ESP
- 00000342  50				PUSH	EAX
- 00000343  53				PUSH	EBX
- 00000344  57				PUSH	EDI
- 00000345  56				PUSH	ESI
+					LOCAL	fpuCont:WORD
+ 0000033F  55		   *	    push   ebp
+ 00000340  8B EC	   *	    mov    ebp, esp
+ 00000342  83 C4 FC	   *	    add    esp, 0FFFFFFFCh
+ 00000345  50				PUSH	EAX
+ 00000346  53				PUSH	EBX
+ 00000347  57				PUSH	EDI
+ 00000348  56				PUSH	ESI
 
 					; Calculate Sum
- 00000346  FF 75 18			PUSH	[EBP+24]
- 00000349  FF 75 10			PUSH	[EBP+16]						;address of sum 
- 0000034C  FF 75 0C			PUSH	[EBP+12]						;address of outputList
- 0000034F  FF 75 08			PUSH	[EBP+8]							;ARRAYLEN (elements in array)
- 00000352  E8 0000001A			CALL	calcSum
+ 00000349  FF 75 18			PUSH	[EBP+24]
+ 0000034C  FF 75 10			PUSH	[EBP+16]						;address of sum 
+ 0000034F  FF 75 0C			PUSH	[EBP+12]						;address of outputList
+ 00000352  FF 75 08			PUSH	[EBP+8]							;ARRAYLEN (elements in array)
+ 00000355  E8 00000028			CALL	calcSum
 
 					; Set EDI and ESI 
- 00000357  8B 75 10			MOV		ESI, [EBP+16]					;address of sum 
- 0000035A  8B 7D 14			MOV		EDI, [EBP+20]					;address of average
+ 0000035A  8B 75 10			MOV		ESI, [EBP+16]					;address of sum 
+ 0000035D  8B 7D 14			MOV		EDI, [EBP+20]					;address of average
+
+					; Change Controls to Round Down
+					; Credit: http://www.ray.masmcode.com/tutorial/fpuchap3.htm#fstcw
+ 00000360  9B DB E3			FINIT
+ 00000363  9B D9 7D FE			FSTCW	fpuCont
+ 00000367  9B				FWAIT
+ 00000368  66| 81 4D FE			OR		fpuCont, 0C00h
+	   0C00
+ 0000036E  D9 6D FE			FLDCW   fpuCont
 
 					; Divide Number of Elements
- 0000035D  9B DB E3			FINIT
- 00000360  DB 06			FILD	SDWORD PTR [ESI]
- 00000362  DB 45 08			FILD	SDWORD PTR [EBP+8]
- 00000365  DE F9			FDIV
- 00000367  DB 1F			FISTP	SDWORD PTR [EDI]
+ 00000371  DB 06			FILD	SDWORD PTR [ESI]
+ 00000373  DB 45 08			FILD	SDWORD PTR [EBP+8]				;ARRAYLEN (elements in array)
+ 00000376  DE F9			FDIV
+ 00000378  DB 1F			FISTP	SDWORD PTR [EDI]
 
 					; Restore Registers and Return
- 00000369  5E				POP		ESI
- 0000036A  5F				POP		EDI
- 0000036B  5B				POP		EBX
- 0000036C  58				POP		EAX
- 0000036D  5D				POP		EBP
- 0000036E  C2 0014			RET		20
- 00000371			calcAverage ENDP
+ 0000037A  5E				POP		ESI
+ 0000037B  5F				POP		EDI
+ 0000037C  5B				POP		EBX
+ 0000037D  58				POP		EAX
+ 0000037E  C9		   *	    leave  
+ 0000037F  C2 0014			RET		20
+ 00000382			calcAverage ENDP
 
 				; ---------------------------------------------------------------------------------
 				; Name: calcSum
@@ -921,42 +1015,42 @@ Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 14:16:58
 				; Returns: None.  Displays converted number using mDisplayString MACRO.
 				;		
 				; ---------------------------------------------------------------------------------
- 00000371			calcSum PROC
+ 00000382			calcSum PROC
 					; Preserve Registers
- 00000371  55				PUSH	EBP
- 00000372  8B EC			MOV		EBP, ESP
- 00000374  51				PUSH	ECX
- 00000375  57				PUSH	EDI
- 00000376  56				PUSH	ESI
+ 00000382  55				PUSH	EBP
+ 00000383  8B EC			MOV		EBP, ESP
+ 00000385  51				PUSH	ECX
+ 00000386  57				PUSH	EDI
+ 00000387  56				PUSH	ESI
 
 
 					; Set Registers to Traverse Array
- 00000377  8B 4D 08			MOV		ECX, [EBP+8]					;ARRAYLEN (elements in array)
- 0000037A  8B 75 0C			MOV		ESI, [EBP+12]					;address of outputLlist
- 0000037D  8B 7D 10			MOV		EDI, [EBP+16]					;address of sum
+ 00000388  8B 4D 08			MOV		ECX, [EBP+8]					;ARRAYLEN (elements in array)
+ 0000038B  8B 75 0C			MOV		ESI, [EBP+12]					;address of outputLlist
+ 0000038E  8B 7D 10			MOV		EDI, [EBP+16]					;address of sum
 
- 00000380  9B DB E3			FINIT
- 00000383  DB 06			FILD	SDWORD PTR [ESI]
- 00000385  03 75 14			ADD		ESI, [EBP+20]					;typeSize
- 00000388  49				DEC		ECX
+ 00000391  9B DB E3			FINIT
+ 00000394  DB 06			FILD	SDWORD PTR [ESI]
+ 00000396  03 75 14			ADD		ESI, [EBP+20]					;typeSize
+ 00000399  49				DEC		ECX
 
- 00000389			_NextElement:
+ 0000039A			_NextElement:
 					; Add Elements in outputList
- 00000389  DB 06			FILD	SDWORD PTR [ESI]
- 0000038B  DE C1			FADD
- 0000038D  03 75 14			ADD		ESI, [EBP+20]					;typeSize
- 00000390  E2 F7			LOOP	_NextElement
+ 0000039A  DB 06			FILD	SDWORD PTR [ESI]
+ 0000039C  DE C1			FADD
+ 0000039E  03 75 14			ADD		ESI, [EBP+20]					;typeSize
+ 000003A1  E2 F7			LOOP	_NextElement
 					
 					; Store in sum
- 00000392  DB 1F			FISTP	SDWORD PTR [EDI]
+ 000003A3  DB 1F			FISTP	SDWORD PTR [EDI]
 
 					; Restore registers and Return
- 00000394  5E				POP		ESI
- 00000395  5F				POP		EDI
- 00000396  59				POP		ECX
- 00000397  5D				POP		EBP
- 00000398  C2 0010			RET		16
- 0000039B			calcSum ENDP
+ 000003A5  5E				POP		ESI
+ 000003A6  5F				POP		EDI
+ 000003A7  59				POP		ECX
+ 000003A8  5D				POP		EBP
+ 000003A9  C2 0010			RET		16
+ 000003AC			calcSum ENDP
 
 				; ---------------------------------------------------------------------------------
 				; Name: displayFarewell
@@ -975,25 +1069,25 @@ Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 14:16:58
 				; Returns: None. Displays farewell.
 				;		
 				; ---------------------------------------------------------------------------------
- 0000039B			displayFarewell PROC
+ 000003AC			displayFarewell PROC
 					; Set Base Pointer
- 0000039B  55				PUSH	EBP
- 0000039C  8B EC			MOV		EBP, ESP
+ 000003AC  55				PUSH	EBP
+ 000003AD  8B EC			MOV		EBP, ESP
 
 					mDisplayString [EBP+8]							;address of farewell
- 0000039E  52		     1		PUSH	EDX
- 0000039F  8B 55 08	     1		MOV		EDX, [EBP+8]
- 000003A2  E8 00000000 E     1		CALL	WriteString
- 000003A7  5A		     1		POP		EDX
+ 000003AF  52		     1		PUSH	EDX
+ 000003B0  8B 55 08	     1		MOV		EDX, [EBP+8]
+ 000003B3  E8 00000000 E     1		CALL	WriteString
+ 000003B8  5A		     1		POP		EDX
 
 					; Restore Base Pointer
- 000003A8  5D				POP		EBP
- 000003A9  C2 0004			RET		4
+ 000003B9  5D				POP		EBP
+ 000003BA  C2 0004			RET		4
 
- 000003AC			displayFarewell ENDP
+ 000003BD			displayFarewell ENDP
 
 				END main
-Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/02/20 14:16:58
+Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/03/20 14:01:45
 8Stringing Signs and Signing Strings (Proj6_demeisol.asm     Symbols 2 - 1
 
 
@@ -1095,8 +1189,8 @@ Segments and Groups:
 
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
-_DATA  . . . . . . . . . . . . .	32 Bit	 000001D7 Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 000003AC Para	  Public  'CODE'	
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000369 Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000003BD Para	  Public  'CODE'	
 
 
 Procedures, parameters, and locals:
@@ -1203,10 +1297,11 @@ WriteStackFrame  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 WriteString  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteToFile  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteWindowsMsg  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-calcAverage  . . . . . . . . . .	P Near	 0000033F _TEXT	Length= 00000032 Public STDCALL
-calcSum  . . . . . . . . . . . .	P Near	 00000371 _TEXT	Length= 0000002A Public STDCALL
-  _NextElement . . . . . . . . .	L Near	 00000389 _TEXT	
-displayFarewell  . . . . . . . .	P Near	 0000039B _TEXT	Length= 00000011 Public STDCALL
+calcAverage  . . . . . . . . . .	P Near	 0000033F _TEXT	Length= 00000043 Public STDCALL
+  fpuCont  . . . . . . . . . . .	Word	 bp - 00000002
+calcSum  . . . . . . . . . . . .	P Near	 00000382 _TEXT	Length= 0000002A Public STDCALL
+  _NextElement . . . . . . . . .	L Near	 0000039A _TEXT	
+displayFarewell  . . . . . . . .	P Near	 000003AC _TEXT	Length= 00000011 Public STDCALL
 displayList  . . . . . . . . . .	P Near	 000002FD _TEXT	Length= 00000042 Public STDCALL
   _Display . . . . . . . . . . .	L Near	 00000312 _TEXT	
   _Return  . . . . . . . . . . .	L Near	 00000339 _TEXT	
@@ -1457,42 +1552,42 @@ VK_UP  . . . . . . . . . . . . .	Number	 00000026h
 WINDOW_BUFFER_SIZE_EVENT . . . .	Number	 00000004h   
 WriteConsoleOutputCharacter  . .	Text   	 WriteConsoleOutputCharacterA
 WriteConsole . . . . . . . . . .	Text   	 WriteConsoleA
-average  . . . . . . . . . . . .	DWord	 000001CB _DATA	
-avgTitle . . . . . . . . . . . .	Byte	 0000010A _DATA	
+average  . . . . . . . . . . . .	DWord	 0000035D _DATA	
+avgTitle . . . . . . . . . . . .	Byte	 0000029C _DATA	
 black  . . . . . . . . . . . . .	Number	 00000000h   
 blue . . . . . . . . . . . . . .	Number	 00000001h   
 brown  . . . . . . . . . . . . .	Number	 00000006h   
 cyan . . . . . . . . . . . . . .	Number	 00000003h   
-error  . . . . . . . . . . . . .	Byte	 00000071 _DATA	
+error  . . . . . . . . . . . . .	Byte	 00000225 _DATA	
 exit . . . . . . . . . . . . . .	Text   	 INVOKE ExitProcess,0
-farewell . . . . . . . . . . . .	Byte	 00000138 _DATA	
+farewell . . . . . . . . . . . .	Byte	 000002CA _DATA	
 gray . . . . . . . . . . . . . .	Number	 00000008h   
 green  . . . . . . . . . . . . .	Number	 00000002h   
-inputLen . . . . . . . . . . . .	DWord	 000001C3 _DATA	
+inputLen . . . . . . . . . . . .	DWord	 00000355 _DATA	
 intro1 . . . . . . . . . . . . .	Byte	 00000000 _DATA	
 intro2 . . . . . . . . . . . . .	Byte	 0000003C _DATA	
-isValid  . . . . . . . . . . . .	DWord	 000001CF _DATA	
+isValid  . . . . . . . . . . . .	DWord	 00000361 _DATA	
 lightBlue  . . . . . . . . . . .	Number	 00000009h   
 lightCyan  . . . . . . . . . . .	Number	 0000000Bh   
 lightGray  . . . . . . . . . . .	Number	 00000007h   
 lightGreen . . . . . . . . . . .	Number	 0000000Ah   
 lightMagenta . . . . . . . . . .	Number	 0000000Dh   
 lightRed . . . . . . . . . . . .	Number	 0000000Ch   
-listTitle  . . . . . . . . . . .	Byte	 000000EC _DATA	
+listTitle  . . . . . . . . . . .	Byte	 0000027E _DATA	
 magenta  . . . . . . . . . . . .	Number	 00000005h   
-outputList . . . . . . . . . . .	DWord	 00000197 _DATA	
-pStringLen . . . . . . . . . . .	DWord	 00000182 _DATA	
-processedStr . . . . . . . . . .	Byte	 00000176 _DATA	
-prompt1  . . . . . . . . . . . .	Byte	 000000A8 _DATA	
+outputList . . . . . . . . . . .	DWord	 00000329 _DATA	
+pStringLen . . . . . . . . . . .	DWord	 00000314 _DATA	
+processedStr . . . . . . . . . .	Byte	 00000308 _DATA	
+prompt1  . . . . . . . . . . . .	Byte	 0000025C _DATA	
 red  . . . . . . . . . . . . . .	Number	 00000004h   
-signedNum  . . . . . . . . . . .	DWord	 000001D3 _DATA	
-spacer . . . . . . . . . . . . .	Byte	 000000FD _DATA	
-sumTitle . . . . . . . . . . . .	Byte	 00000100 _DATA	
-sum  . . . . . . . . . . . . . .	DWord	 000001C7 _DATA	
-tempStr  . . . . . . . . . . . .	Byte	 0000016A _DATA	
-typeSize . . . . . . . . . . . .	DWord	 000001BF _DATA	
-userInputSize  . . . . . . . . .	DWord	 00000193 _DATA	
-userInput  . . . . . . . . . . .	Byte	 00000186 _DATA	
+signedNum  . . . . . . . . . . .	DWord	 00000365 _DATA	
+spacer . . . . . . . . . . . . .	Byte	 0000028F _DATA	
+sumTitle . . . . . . . . . . . .	Byte	 00000292 _DATA	
+sum  . . . . . . . . . . . . . .	DWord	 00000359 _DATA	
+tempStr  . . . . . . . . . . . .	Byte	 000002FC _DATA	
+typeSize . . . . . . . . . . . .	DWord	 00000351 _DATA	
+userInputSize  . . . . . . . . .	DWord	 00000325 _DATA	
+userInput  . . . . . . . . . . .	Byte	 00000318 _DATA	
 white  . . . . . . . . . . . . .	Number	 0000000Fh   
 wsprintf . . . . . . . . . . . .	Text   	 wsprintfA
 yellow . . . . . . . . . . . . .	Number	 0000000Eh   

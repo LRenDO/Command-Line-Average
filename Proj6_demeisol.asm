@@ -1,7 +1,7 @@
 TITLE Stringing Signs and Signing Strings (Proj6_demeisol.asm)
 
 ; Author: Ren Demeis-Ortiz
-; Last Modified: 11.3.20
+; Last Modified: 12.2.20
 ; OSU Email: demeisol@oregonstate.edu
 ; Course Number: CS271 Sec 400
 ; Project Number: 6          
@@ -10,8 +10,9 @@ TITLE Stringing Signs and Signing Strings (Proj6_demeisol.asm)
 ;		a string. Validates input to make sure it is valid dword and stores all 
 ;		valid values in an array. Calculates sum and average. Finally it prints 
 ;		the integers entered, sum and average by converting the signed number 
-;		back to a string before displaying it. Total sum must be a valid signed
-;		32 bit integer. Requires Irvine Library.
+;		back to a string before displaying it. Total sum assumed to be a valid 
+;		signed 32 bit integer for calculations to be correct per instructions. 
+;		Requires Irvine Library.
 
 INCLUDE Irvine32.inc
 
@@ -100,19 +101,20 @@ SDWMAX = 2147483647
 ; Message and Title Variables
 intro1			BYTE	"Stringing Signs and Signing Strings "
 				BYTE	"By Ren Demeis-Ortiz",13,10,13,10,0
-intro2			BYTE	"Functionality",13,10
-				BYTE	"...",13,10
-				BYTE	"...",13,10
-				BYTE	"...",13,10
-				BYTE	"...",13,10
-				BYTE	"...",13,10
-				BYTE	"...",13,10
-				BYTE	"...",13,10
-				BYTE	13,10,0
+intro2			BYTE	"This program will take 10 signed decimal integers and "
+				BYTE	"calculate the sum and average of those integers.",13,10
+				BYTE	"Each number must be between -2,147,483,648 and " 
+				BYTE	"+2,147,483,647 and may only contain digits.",13,10
+				BYTE	"The first character, however, can be a postive or "
+				BYTE	"negative sign.  The numbers you enter will",13,10
+				BYTE	"be displayed and then the sum and the rounded down "
+				BYTE	"average of the numbers entered. The sum",13,10
+				BYTE	"must be a 32 bit signed integer for a correct summation."
+				BYTE	13,10,13,10,"You can begin entering your numbers below."
+				BYTE	13,10,13,10,0
 error			BYTE	13,10,"Woops! That wasn't a valid input. Let's try "
 				BYTE	"again.",13,10,0
-prompt1			BYTE	13,10,"Enter a signed number between -2,147,483,648 " 
-				BYTE	"and +2,147,483,647: ",0
+prompt1			BYTE	13,10,"Enter a 32 bit signed integer: ",0
 listTitle		BYTE	13,10,"You Entered:",13,10,0
 spacer			BYTE	", ",0
 sumTitle		BYTE	13,10,13,10,"Sum: ",0
@@ -718,8 +720,7 @@ displayList	ENDP
 ; ---------------------------------------------------------------------------------
 calcAverage PROC
 	; Preserve Registers
-	PUSH	EBP
-	MOV		EBP, ESP
+	LOCAL	fpuCont:WORD
 	PUSH	EAX
 	PUSH	EBX
 	PUSH	EDI
@@ -736,10 +737,17 @@ calcAverage PROC
 	MOV		ESI, [EBP+16]					;address of sum 
 	MOV		EDI, [EBP+20]					;address of average
 
-	; Divide Number of Elements
+	; Change Controls to Round Down
+	; Credit: http://www.ray.masmcode.com/tutorial/fpuchap3.htm#fstcw
 	FINIT
+	FSTCW	fpuCont
+	FWAIT
+	OR		fpuCont, 0C00h
+	FLDCW   fpuCont
+
+	; Divide Number of Elements
 	FILD	SDWORD PTR [ESI]
-	FILD	SDWORD PTR [EBP+8]
+	FILD	SDWORD PTR [EBP+8]				;ARRAYLEN (elements in array)
 	FDIV
 	FISTP	SDWORD PTR [EDI]
 
@@ -748,7 +756,6 @@ calcAverage PROC
 	POP		EDI
 	POP		EBX
 	POP		EAX
-	POP		EBP
 	RET		20
 calcAverage ENDP
 
